@@ -722,6 +722,78 @@ static void app_mmi_volume_up_single_stream(T_AUDIO_STREAM_TYPE volume_type, uin
         }
     }
 }
+static void app_mmi_volume_down_single_stream(T_AUDIO_STREAM_TYPE volume_type, uint8_t active_idx);
+static void app_mmi_volume_up_mixing(uint8_t control_flag)
+{
+   uint8_t active_idx;
+   T_AUDIO_STREAM_TYPE volume_type;
+   T_APP_BR_LINK *dongle_link = app_dongle_get_connected_dongle_link();
+   T_APP_BR_LINK *phone_link = app_dongle_get_connected_phone_link();
+   if ((app_hfp_get_call_status() == APP_CALL_IDLE) &&
+        (app_db.br_link[app_a2dp_get_active_idx()].avrcp_play_status != BT_AVRCP_PLAY_STATUS_PLAYING) &&
+        (app_audio_get_bud_stream_state() != BUD_STREAM_STATE_AUDIO))
+    {
+        app_key_set_volume_status(false);
+        if (app_cfg_const.disallow_adjust_volume_when_idle)
+        {
+            return;
+        }
+    }
+    if (app_bond_get_pair_idx_mapping(app_db.br_link[dongle_link->id].bd_addr, &active_idx) == false)
+    {
+        APP_PRINT_ERROR0("live app_set_dongle_vol_call find dongle pair_index fail");
+        return;
+    }
+	 if (app_bond_get_pair_idx_mapping(app_db.br_link[phone_link->id].bd_addr, &active_idx) == false)
+    {
+        APP_PRINT_ERROR0("live app_set_dongle_vol_call find phone pair_index fail");
+        return;
+    }
+    if(control_flag)
+    {
+      #if F_APP_LINEIN_SUPPORT
+	    if (app_line_in_playing_state_get())
+	    {
+	        app_line_in_volume_up_handle();
+	        return;
+	    }
+	   #endif
+	   if ((app_hfp_get_call_status() == APP_CALL_IDLE))
+       {
+           APP_PRINT_TRACE0("live APP_CALL_IDLE up");
+          app_mmi_volume_up_single_stream(AUDIO_STREAM_TYPE_PLAYBACK, dongle_link->id);
+	      app_mmi_volume_down_single_stream(AUDIO_STREAM_TYPE_PLAYBACK, phone_link->id);
+	   }
+	   else
+	   {
+	       APP_PRINT_TRACE0("live APP_CALL_ACTIVE up");
+           app_mmi_volume_up_single_stream(AUDIO_STREAM_TYPE_VOICE, phone_link->id);
+	       app_mmi_volume_down_single_stream(AUDIO_STREAM_TYPE_PLAYBACK, dongle_link->id);
+	   }
+	}
+	else
+	{
+	    #if F_APP_LINEIN_SUPPORT
+	    if (app_line_in_playing_state_get())
+	    {
+	        app_line_in_volume_down_handle();
+	        return;
+	    }
+       #endif
+	   if ((app_hfp_get_call_status() == APP_CALL_IDLE))
+       {
+       APP_PRINT_TRACE0("live APP_CALL_IDLE DOWN");
+         app_mmi_volume_up_single_stream(AUDIO_STREAM_TYPE_PLAYBACK, phone_link->id);
+	     app_mmi_volume_down_single_stream(AUDIO_STREAM_TYPE_PLAYBACK, dongle_link->id);
+	   }
+	   else
+	   {
+	       APP_PRINT_TRACE0("live APP_CALL_ACTIVE DOWN");
+           app_mmi_volume_down_single_stream(AUDIO_STREAM_TYPE_VOICE, phone_link->id);
+	       app_mmi_volume_up_single_stream(AUDIO_STREAM_TYPE_PLAYBACK, dongle_link->id);
+	   }
+	}
+}
 
 static void app_mmi_volume_up()
 {
@@ -1852,6 +1924,8 @@ void app_mmi_handle_action(uint8_t action)
 
     case MMI_AV_PLAY_PAUSE:
         {
+              T_APP_BR_LINK *dongle_link = app_dongle_get_connected_dongle_link();
+			  uint8_t pair_idx_mapping;
 #if F_APP_LOCAL_PLAYBACK_SUPPORT
             if (app_db.sd_playback_switch == 1)
             {
@@ -1885,16 +1959,20 @@ void app_mmi_handle_action(uint8_t action)
 
 #if F_APP_GAMING_DONGLE_SUPPORT
 #if F_APP_GAMING_CHAT_MIXING_SUPPORT
-#elif (F_APP_24G_BT_AUDIO_SOURCE_CTRL_SUPPORT == 0) && F_APP_MUTLILINK_SOURCE_PRIORITY_UI
-
+//#elif (F_APP_24G_BT_AUDIO_SOURCE_CTRL_SUPPORT == 0) && F_APP_MUTLILINK_SOURCE_PRIORITY_UI
+             APP_PRINT_TRACE3("MMI_AV_PLAY_PAUSE: priority_higher %d, link_num %d, streaming_fg %d",
+                                 app_multilink_customer_is_dongle_priority_higher(), app_link_get_b2s_link_num(),
+                                 app_db.br_link[active_a2dp_idx].streaming_fg);
             if (app_multilink_customer_is_dongle_priority_higher() && app_link_get_b2s_link_num() > 1)
             {
                 T_APP_BR_LINK *p_dongle_link = app_dongle_get_connected_dongle_link();
 
-                if (p_dongle_link && !app_db.br_link[active_a2dp_idx].streaming_fg)
+                //if (p_dongle_link && !app_db.br_link[active_a2dp_idx].streaming_fg)
+                if (p_dongle_link && app_cfg_nv.allowed_source == ALLOWED_SOURCE_BT_24G)
                 {
                     // dongle exists and active a2dp idx not streaming, change_active_to_dongle
                     active_a2dp_idx = p_dongle_link->id;
+					APP_PRINT_ERROR1("live    dongle higher active_a2dp_idx = %d ",active_a2dp_idx);
                 }
             }
 #endif
@@ -1910,6 +1988,7 @@ void app_mmi_handle_action(uint8_t action)
                 if (app_db.br_link[active_a2dp_idx].avrcp_play_status != BT_AVRCP_PLAY_STATUS_PLAYING)
                 {
                     // Update play status after AVRCP play status event received
+				 APP_PRINT_ERROR0("live    find dongle");
                     app_db.br_link[active_a2dp_idx].avrcp_ready_to_pause = true;
                     bt_avrcp_play(app_db.br_link[active_a2dp_idx].bd_addr);
 
@@ -1918,6 +1997,7 @@ void app_mmi_handle_action(uint8_t action)
                 }
                 else
                 {
+				        APP_PRINT_ERROR0("live    find dongle");
                     app_db.br_link[active_a2dp_idx].avrcp_ready_to_pause = false;
                     bt_avrcp_pause(app_db.br_link[active_a2dp_idx].bd_addr);
 
@@ -2716,6 +2796,9 @@ void app_mmi_handle_action(uint8_t action)
     case MMI_DEV_SPK_VOL_UP:
         {
             app_key_set_volume_status(true);
+			if (app_cfg_nv.allowed_source == ALLOWED_SOURCE_BT_24G)
+			 	   app_mmi_volume_up_mixing(1);
+             else
             app_mmi_volume_up();
         }
         break;
@@ -2731,6 +2814,9 @@ void app_mmi_handle_action(uint8_t action)
                 break;
             }
             app_key_set_volume_status(true);
+		if (app_cfg_nv.allowed_source == ALLOWED_SOURCE_BT_24G)
+			 app_mmi_volume_up_mixing(0);
+          else
             app_mmi_volume_down();
         }
         break;

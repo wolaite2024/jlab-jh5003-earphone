@@ -1480,6 +1480,8 @@ int main(void)
 #if F_APP_LINEIN_SUPPORT
         app_line_in_init();
 #endif
+      extern void app_wlt_ui_init(void);
+		app_wlt_ui_init();
 
 #if F_APP_AIRPLANE_SUPPORT
         app_airplane_init();
