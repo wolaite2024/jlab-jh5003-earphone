@@ -1,0 +1,89 @@
+
+1. bin
+
+    [1]. rws dsp1 only version
+    
+        bin\rtl87x3d\8773DO\rws\BANK0
+            boot_patch_MP-*.bin
+            OTAHeader_Bank0_*.bin
+            fsbl_bank0_MP-*.bin
+            patch_bank0_MP-*.bin
+            stack_patch_bank0_MP-*.bin
+            rws_bank0_MP-*.bin
+            dsp_config_image-*.bin
+            dsp1_app_image_*.bin
+            dsp1_sys_image_*.bin
+            dsp3_app_image_*.bin
+            ANC2_LLAPT1_brightness_AdaptiveANC_RWS_*.bin
+            
+        bin\rtl87x3d\8773DO\rws\mcu_cfg\For EVB\default
+            APP_Config_*.bin
+            SYSTEM_Config_*.bin
+            
+    [2]. rws dsp1 + dsp2 version
+    
+        bin\rtl87x3d\8773DO\rws\BANK0
+            boot_patch_MP-*.bin
+            OTAHeader_Bank0_*.bin
+            fsbl_bank0_MP-*.bin
+            patch_bank0_MP-*.bin
+            stack_patch_bank0_MP-*.bin
+            rws_bank0_MP-*.bin
+			dsp_config_image-*.bin
+            dsp3_app_image_*.bin
+            ANC2_LLAPT1_brightness_AdaptiveANC_RWS_*.bin
+            
+        bin\rtl87x3d\8773DO\rws\DSP_Image\dsp1_plus_dsp2
+            dsp1_app_image_*.bin
+            dsp1_sys_image_*.bin
+			dsp2_sys_image_*.bin
+            
+        bin\rtl87x3d\8773DO\rws\mcu_cfg\For EVB\dsp1_plus_dsp2
+            APP_Config_*.bin
+            SYSTEM_Config_*.bin
+            
+    [3]. stereo dsp1 only version
+    
+        bin\rtl87x3d\8773DO\stereo\BANK0
+            boot_patch_MP-*.bin
+            OTAHeader_Bank0_*.bin
+            fsbl_bank0_MP-*.bin
+            patch_bank0_MP-*.bin
+            stack_patch_bank0_MP-*.bin
+            stereo_bank0_MP-*.bin
+            dsp_config_image-*.bin
+            dsp1_app_image_*.bin
+            dsp1_sys_image_*.bin
+            dsp3_app_image_*.bin
+            ANC2_LLAPT1_AdaptiveANC_*.bin
+            
+        bin\rtl87x3d\8773DO\stereo\mcu_cfg\For EVB\default
+            APP_Config_*.bin
+            SYSTEM_Config_*.bin
+            
+2. lib
+
+    bin\rtl87x3d\framework\audio.lib        /* audio manager */
+    bin\rtl87x3d\framework\btm.lib          /* BR/EDR communication manager */
+    bin\rtl87x3d\framework\console.lib      /* uart console manager */
+    bin\rtl87x3d\framework\remote.lib       /* b2b communication manager */
+    bin\rtl87x3d\framework\sym.lib          /* power on/off event manager */
+    bin\rtl87x3d\ble_mgr.lib                /* BLE communication manager */
+    bin\rtl87x3d\engage.lib                 /* b2b engage manager */
+    bin\rtl87x3d\gaming_bt.lib              /* gaming dongle BR/EDR communication manager */
+    bin\rtl87x3d\gap_utils.lib              /* GAP patch */
+    bin\rtl87x3d\hal_utils.lib              /* Hardware Abstraction Layer */
+    bin\rtl87x3d\leaudio.lib                /* BLE Audio manager */
+    bin\rtl87x3d\ROM.lib                    /* platform manager */
+    bin\rtl87x3d\sd.lib                     /* SD card manager */
+    bin\rtl87x3d\usb.lib                    /* USB manager */
+    
+3. proj
+
+    keil IDE: uVision V5.26 or above
+
+    project: board\evb\rws\rtl87x3d_rws.uvprojx
+    
+    target: [RTL8773DO] rws_16M_dual_bank0 / rws_16M_dual_bank1 / stereo_16M_dual_bank0 / stereo_16M_dual_bank1
+            [RTL8773DFL] rws_8M_dual_bank0 / rws_8M_dual_bank1 / stereo_8M_dual_bank0 / stereo_8M_dual_bank1
+            

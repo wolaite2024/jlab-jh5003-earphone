@@ -1,0 +1,23 @@
+#ifndef _HAS_INT_H_
+#define _HAS_INT_H_
+
+#ifdef  __cplusplus
+extern "C" {
+#endif      /* __cplusplus */
+
+
+#define HAS_CP_READ_PRESET_RSP_PARAM_MIN_LEN     (4 + HAS_MIN_PRESET_NAME_LENGTH)
+#define HAS_CP_READ_PRESET_RSP_PARAM_MAX_LEN     (4 + HAS_MAX_PRESET_NAME_LENGTH)
+#define HAS_CP_WRITE_PRESET_NAME_PARAM_MIN_LEN   (1 + HAS_MIN_PRESET_NAME_LENGTH)
+#define HAS_CP_WRITE_PRESET_NAME_PARAM_MAX_LEN   (1 + HAS_MAX_PRESET_NAME_LENGTH)
+
+#define HAS_CP_GENERIC_UPDATE_PARAM_MIN_LEN      (6 + HAS_MIN_PRESET_NAME_LENGTH)
+#define HAS_CP_GENERIC_UPDATE_PARAM_MAX_LEN      (6 + HAS_MAX_PRESET_NAME_LENGTH)
+#define HAS_CP_PRESET_RECORD_CHANGE_PARAM_LEN    (4)
+
+
+#ifdef  __cplusplus
+}
+#endif      /*  __cplusplus */
+
+#endif

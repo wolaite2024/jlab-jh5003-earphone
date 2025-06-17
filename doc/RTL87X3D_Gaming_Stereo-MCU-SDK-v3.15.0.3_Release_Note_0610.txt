@@ -1,0 +1,23 @@
+//-----------------------------------------------------------------------------------------------
+//20250610(v3.15.0.3)
+APP: 0.0.0.1(Commit-Id: bc60a0df6dd68474378f950dd80bba0c81229e83)
+
+Sys Patch Commit-Id: 016e47c7e7d8df5546df65e8a195a534947152c3
+
+Stack Patch Commit-Id: abc7d042151b5c54b3eaa314a785cc8f1bc1c5d6
+
+Change Note: 
+
+
+OTA Header: 0.0.0.1
+DSP Image: v3.1.5.52
+DspConfigTool: v3.150.59
+MCUConfigTool: v7.140.147
+MPPGTool: v6.1.158.0
+DebugAnalyzer: v4.1.11.0
+AncDesignTool: v2.0.33.6
+ANCMPTool: v1.0.0.34
+AudioConnect Android App: 2.17.36
+AudioConnect Android SDK: 2.17.36
+AudioConnect iOS App: v2.17.4
+AudioConnect iOS SDK: v1.17.4
