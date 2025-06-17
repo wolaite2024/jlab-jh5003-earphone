@@ -35,7 +35,7 @@
 #define F_APP_SINGLE_MUTLILINK_SCENERIO_1           0 //this macro only enable in single mode, and if it enable, F_APP_MUTILINK_VA_PREEMPTIVE must be disable
 #define F_APP_MUTILINK_VA_PREEMPTIVE                1 //ERWS_MULTILINK_SUPPORT
 #define F_APP_MUTILINK_TRIGGER_HIGH_PRIORITY        0
-#define F_APP_MUTLILINK_SOURCE_PRIORITY_UI          0
+#define F_APP_MUTLILINK_SOURCE_PRIORITY_UI          1
 #define F_APP_MUTILINK_ALLOW_TWO_SCO                0 //considering bandwidth issue, only can be enabled for single mode application
 #define F_APP_CALL_HOLD_SUPPORT                     0
 #define F_APP_VOICE_SPK_EQ_SUPPORT                  1
@@ -49,7 +49,7 @@
 #define F_APP_USB_AUDIO_SUPPORT                     0
 #define F_APP_USB_HID_SUPPORT                       0
 #define F_APP_USB_SUSPEND_SUPPORT                   0
-#define F_APP_LINEIN_SUPPORT                        0
+#define F_APP_LINEIN_SUPPORT                        1
 #define F_APP_ERWS_SUPPORT                          1
 #define F_APP_VAD_SUPPORT                           0
 #define F_APP_CFU_SUPPORT                           0
@@ -60,13 +60,13 @@
 #define F_APP_CFU_SPP_SUPPORT                       0
 #define F_APP_CFU_BLE_CHANNEL_SUPPORT               0
 #define F_APP_FIND_EAR_BUD_SUPPORT                  0
-#define F_APP_EXT_MIC_SWITCH_SUPPORT                0
+#define F_APP_EXT_MIC_SWITCH_SUPPORT                1
 
 //Dongle related
 #define F_APP_COMMON_DONGLE_SUPPORT                 0
-#define F_APP_GAMING_DONGLE_SUPPORT                 0
+#define F_APP_GAMING_DONGLE_SUPPORT                 1
 #define F_APP_CONFERENCE_DONGLE_SUPPORT             0
-#define F_APP_24G_BT_AUDIO_SOURCE_CTRL_SUPPORT      0
+#define F_APP_24G_BT_AUDIO_SOURCE_CTRL_SUPPORT      1
 #define F_APP_LEA_ALWAYS_CONVERSATION               0
 #define F_APP_DONGLE_MULTI_PAIRING                  0
 /* this flag depends on F_APP_COMMON_DONGLE_SUPPORT */
