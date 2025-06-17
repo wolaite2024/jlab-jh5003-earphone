@@ -414,6 +414,7 @@ void app_dongle_force_stop_recording(void)
     app_sniff_mode_b2s_enable_all(SNIFF_DISABLE_MASK_SPP_RECORD);
 }
 
+extern void app_set_dongle_vol_call(uint8_t startflag);
 /**
     * @brief        This function can stop the record.
     * @return       void
@@ -441,6 +442,7 @@ void app_dongle_stop_recording(uint8_t bd_addr[6])
     audio_track_stop(dongle_record.handle);
 
     app_dongle_set_record_state(false);
+	app_set_dongle_vol_call(0);
     app_transfer_queue_reset(CMD_PATH_SPP);
 
 #if F_APP_GAMING_DONGLE_SUPPORT
@@ -525,7 +527,7 @@ void app_dongle_start_recording(uint8_t bd_addr[6])
     audio_track_start(dongle_record.handle);
     app_sniff_mode_b2s_disable_all(SNIFF_DISABLE_MASK_SPP_RECORD);
     app_bt_policy_b2s_tpoll_update(dongle_record.bd_addr, BP_TPOLL_EVENT_DONGLE_SPP_START);
-
+	app_set_dongle_vol_call(1);
 #if F_APP_SLIDE_SWITCH_MIC_MUTE_TOGGLE
     if (app_slide_switch_mic_mute_toggle_support())
     {

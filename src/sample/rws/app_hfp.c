@@ -708,6 +708,88 @@ static void app_hfp_transfer_sec_auto_answer_call_timer(void)
     }
 }
 #endif
+#include "app_dongle_source_ctrl.h"
+static void app_set_dongle_vol(void)
+{
+    T_APP_BR_LINK *dongle_link = app_dongle_get_connected_dongle_link();
+    T_APP_BR_LINK *phone_link = app_dongle_get_connected_phone_link();
+    uint8_t curr_volume,phone_curr_volume;
+	uint8_t pair_idx_mapping;
+	static uint8_t pre_curr_volume = 0;
+	static uint8_t set_vol_flag = 0;
+    if(app_cfg_nv.allowed_source != ALLOWED_SOURCE_BT_24G || app_hfp_get_call_status()     < APP_CALL_ACTIVE)
+    {
+         APP_PRINT_ERROR0("live    source not ALLOWED_SOURCE_BT_24G");
+        return;
+	}
+    if (app_bond_get_pair_idx_mapping(app_db.br_link[dongle_link->id].bd_addr, &pair_idx_mapping) == false)
+    {
+        APP_PRINT_ERROR0("live app_set_dongle_vol find dongle pair_index fail");
+        return;
+    }
+	 if (app_bond_get_pair_idx_mapping(app_db.br_link[phone_link->id].bd_addr, &pair_idx_mapping) == false)
+    {
+        APP_PRINT_ERROR0("live app_set_dongle_vol find phone pair_index fail");
+        return;
+    }
+    audio_track_volume_out_get(app_db.br_link[dongle_link->id].a2dp_track_handle, &curr_volume);
+	audio_track_volume_out_get(app_db.br_link[phone_link->id].sco_track_handle, &phone_curr_volume);
+    APP_PRINT_INFO2("live app_get_dongle_vol curr_volume    = %d phone_curr_volume = %d  ", curr_volume,phone_curr_volume);
+   if(app_hfp_get_call_status()     != APP_CALL_IDLE && (!set_vol_flag))
+   {
+       pre_curr_volume = curr_volume;
+	   set_vol_flag = 1;
+       audio_track_volume_out_set(app_db.br_link[dongle_link->id].a2dp_track_handle, 4); 
+	   APP_PRINT_INFO2("live app_set_dongle_vol0 curr_volume    = %d pre_curr_volume = %d",4,pre_curr_volume);
+   }
+  else if(app_hfp_get_call_status()     == APP_CALL_IDLE && set_vol_flag)
+   	{
+       set_vol_flag = 0;
+	   audio_track_volume_out_set(app_db.br_link[dongle_link->id].a2dp_track_handle, pre_curr_volume); 
+	   APP_PRINT_INFO1("live app_set_dongle_vol1 pre_curr_volume    = %d", pre_curr_volume);
+    }
+}
+void app_set_dongle_vol_call(uint8_t startflag)
+{
+    T_APP_BR_LINK *dongle_link = app_dongle_get_connected_dongle_link();
+    T_APP_BR_LINK *phone_link = app_dongle_get_connected_phone_link();
+    uint8_t curr_volume,phone_curr_volume;
+	uint8_t pair_idx_mapping;
+	static uint8_t pre_curr_volume = 0;
+	static uint8_t set_vol_flag = 0;
+    if(app_cfg_nv.allowed_source != ALLOWED_SOURCE_BT_24G)
+    {
+         APP_PRINT_ERROR0("live    source not ALLOWED_SOURCE_BT_24G");
+        return;
+	}
+    if (app_bond_get_pair_idx_mapping(app_db.br_link[dongle_link->id].bd_addr, &pair_idx_mapping) == false)
+    {
+        APP_PRINT_ERROR0("live app_set_dongle_vol_call find dongle pair_index fail");
+        return;
+    }
+	 if (app_bond_get_pair_idx_mapping(app_db.br_link[phone_link->id].bd_addr, &pair_idx_mapping) == false)
+    {
+        APP_PRINT_ERROR0("live app_set_dongle_vol_call find phone pair_index fail");
+        return;
+    }
+    audio_track_volume_out_get(app_db.br_link[dongle_link->id].a2dp_track_handle, &curr_volume);
+	audio_track_volume_out_get(app_db.br_link[phone_link->id].sco_track_handle, &phone_curr_volume);
+    APP_PRINT_INFO2("live app_set_dongle_vol_call curr_volume    = %d phone_curr_volume = %d  ", curr_volume,phone_curr_volume);
+	 APP_PRINT_INFO2("live app_set_dongle_vol_call restore_dongle_recording    = %d dongle_is_enable_mic = %d  ", app_db.restore_dongle_recording,app_db.dongle_is_enable_mic);
+	   if(startflag)
+	   {
+	       pre_curr_volume = curr_volume;
+		   set_vol_flag = 1;
+	       audio_track_volume_out_set(app_db.br_link[phone_link->id].a2dp_track_handle, 4); 
+		   APP_PRINT_INFO2("live app_set_dongle_vol_call0 curr_volume    = %d pre_curr_volume = %d",4,pre_curr_volume);
+	   }
+	  else 
+	   	{
+	       set_vol_flag = 0;
+		   audio_track_volume_out_set(app_db.br_link[phone_link->id].a2dp_track_handle, pre_curr_volume); 
+		   APP_PRINT_INFO1("live app_set_dongle_vol_call1 pre_curr_volume    = %d", pre_curr_volume);
+	    }
+}
 
 static void app_hfp_spk_vol_set(uint8_t *bd_addr, uint8_t volume)
 {
@@ -945,7 +1027,10 @@ static void app_hfp_bt_cback(T_BT_EVENT event_type, void *event_buf, uint16_t bu
 #if (C_APP_END_OUTGOING_CALL_PLAY_CALL_END_TONE == 0)
             uint8_t temp_idx = active_hf_idx;
 #endif
+           APP_PRINT_INFO2("live event_type    = %x hfp curr_status %d", event_type,
+                    param->hfp_call_status.curr_status);
             p_link = app_link_find_br_link(param->hfp_call_status.bd_addr);
+			app_set_dongle_vol();
             if (p_link != NULL)
             {
                 switch (param->hfp_call_status.curr_status)

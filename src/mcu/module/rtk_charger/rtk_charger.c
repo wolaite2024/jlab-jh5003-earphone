@@ -52,10 +52,10 @@ void rtk_charger_init(RTK_CHARGER_STATE_CB app_state_cb, RTK_CHARGER_SOC_CB app_
     charger_api_reg_state_of_charge_callback(rtk_charger_soc_cb);
 }
 
-
+extern T_CHARGER_STATE get_charge_status(void);
 T_CHARGER_STATE rtk_charger_get_charge_state(void)
 {
-    return charger_api_get_charger_state();
+    return get_charge_status();//charger_api_get_charger_state();
 }
 
 
