@@ -120,7 +120,7 @@ typedef struct t_app_ext_mic_vse_data
 } T_APP_EXT_MIC_VSE_DATA;
 
 #if F_APP_EXT_MIC_PLUG_IN_GPIO_DETECT
-#define BOOM_IN_DETECT_PIN      P6_0
+#define BOOM_IN_DETECT_PIN      P3_5//P6_0
 
 static uint8_t app_gpio_ext_mic_timer_id = 0;
 static uint8_t timer_idx_ext_mic_io_debounce = 0;
@@ -655,7 +655,7 @@ static uint8_t app_ext_mic_gpio_detect_switch()
     uint8_t boom_in_level;
     uint8_t mic_plugged = false;
 
-    boom_in_level = hal_gpio_get_input_level(BOOM_IN_DETECT_PIN);
+    boom_in_level = !hal_gpio_get_input_level(BOOM_IN_DETECT_PIN);
 
 #if F_APP_EXT_MIC_SWITCH_IC_SUPPORT
     app_ext_mic_switch_ic_mute(APP_EXT_MIC_IC_MUTE);
@@ -793,7 +793,7 @@ void app_ext_mic_gpio_driver_init(void)
     {
         hal_gpio_init_pin(BOOM_IN_DETECT_PIN, GPIO_TYPE_AUTO, GPIO_DIR_INPUT, GPIO_PULL_UP);
 
-        hal_gpio_set_up_irq(BOOM_IN_DETECT_PIN, GPIO_IRQ_EDGE, GPIO_IRQ_ACTIVE_LOW, true); //Polarity Low
+        hal_gpio_set_up_irq(BOOM_IN_DETECT_PIN, GPIO_IRQ_EDGE, GPIO_IRQ_ACTIVE_HIGH, true); //Polarity Low
 
         hal_gpio_register_isr_callback(BOOM_IN_DETECT_PIN,
                                        app_ext_mic_gpio_detect_intr_handler, 0);
