@@ -157,7 +157,7 @@ void app_loc_mgr_state_machine(T_BUD_LOCATION_EVENT evt, bool from_remote,
             goto log_mgr_print;
         }
 #else
-        if (evt == EVENT_IN_CASE && app_cfg_const.enable_inbox_power_off)
+        if (evt == EVENT_IN_CASE && app_cfg_const.enable_inbox_power_off && (app_link_get_b2s_link_num() == 0))
         {
             app_mmi_handle_action(MMI_DEV_POWER_OFF);
         }

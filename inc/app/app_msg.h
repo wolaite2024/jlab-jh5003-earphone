@@ -128,6 +128,7 @@ typedef enum
     IO_MSG_TYPE_US_PKT_DECODE,
     IO_MSG_TYPE_DS_PCM_ENCODE,
     IO_MSG_TYPE_CONTROLLER,
+    IO_MSG_TYPE_NTC,
 } T_IO_MSG_TYPE;
 
 /**  @brief IO subtype definitions for @ref T_IO_CONSOLE type */

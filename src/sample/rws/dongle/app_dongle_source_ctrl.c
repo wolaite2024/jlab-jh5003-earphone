@@ -336,7 +336,9 @@ void app_dongle_switch_allowed_source(void)
     };
 #endif
 
-    app_dongle_set_allowed_source(next_state[app_cfg_nv.allowed_source]);
+     //app_dongle_set_allowed_source(next_state[app_cfg_nv.allowed_source]);
+    app_dongle_set_allowed_source((T_ALLOWED_SOURCE)app_cfg_nv.allowed_source);
+	APP_PRINT_TRACE1("app_dongle_switch_allowed_source: %d", app_cfg_nv.allowed_source);
 }
 
 void app_dongle_set_allowed_source(T_ALLOWED_SOURCE allowed_source)

@@ -445,7 +445,9 @@ void app_io_msg_handler(T_IO_MSG io_driver_msg_recv)
         break;
 #endif
 #endif
-
+    case IO_MSG_TYPE_NTC:
+		 app_temp_handle();
+	break;
 #if F_APP_GAMING_CONTROLLER_SUPPORT
     case IO_MSG_TYPE_CONTROLLER:
         {

@@ -514,7 +514,7 @@ void app_adp_init(void)
 #if (CONFIG_SOC_SERIES_RTL8773D == 1 || TARGET_RTL8773DFL == 1)
     if (app_cfg_const.thermistor_power_vpa_support)
     {
-        if (adp_get_level(ADP_DETECT_5V) == ADP_LEVEL_HIGH)
+      //  if (adp_get_level(ADP_DETECT_5V) == ADP_LEVEL_HIGH)
         {
             pmu_ldo_pa_control(true);
         }

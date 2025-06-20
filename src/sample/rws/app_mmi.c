@@ -2565,6 +2565,9 @@ void app_mmi_handle_action(uint8_t action)
 
                 sys_mgr_power_on();
             }
+
+			extern void wlt_ui_timer_start(void);
+			wlt_ui_timer_start();
         }
         break;
 
@@ -2613,6 +2616,9 @@ void app_mmi_handle_action(uint8_t action)
                     app_sniff_mode_disable_all();
                     app_mmi_power_off();
                 }
+				extern void wlt_ui_timer_stop(void);
+				wlt_ui_timer_stop();
+				
             }
         }
         break;

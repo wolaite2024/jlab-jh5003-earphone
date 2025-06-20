@@ -833,7 +833,7 @@
 //external mic support
 #if F_APP_STEREO
 #undef F_APP_EXT_MIC_SWITCH_SUPPORT
-#define F_APP_EXT_MIC_SWITCH_SUPPORT                0
+#define F_APP_EXT_MIC_SWITCH_SUPPORT                1
 #if F_APP_EXT_MIC_SWITCH_SUPPORT
 //if adc detect define is 0, it will apply gpio detect
 //adc detect

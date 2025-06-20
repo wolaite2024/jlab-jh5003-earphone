@@ -1647,7 +1647,7 @@ void app_led_check_charging_mode(bool from_non_repeat_mode)
 
     app_charger_state = app_charger_get_charge_state();
 
-    if ((app_db.disallow_charging_led == 1) || (app_cfg_nv.is_dut_test_mode == 1))
+    if ((app_db.disallow_charging_led == 1) || (app_cfg_nv.is_dut_test_mode == 1) ||app_db.device_state == APP_DEVICE_STATE_ON)
     {
         //Disallow charging led about 3s when mcu received valid chargerbox cmd
         //Disallow charging led when dut test mode
@@ -1656,6 +1656,7 @@ void app_led_check_charging_mode(bool from_non_repeat_mode)
         active_charging_led_mode = LED_MODE_ALL_OFF;
         return;
     }
+
 
     if (app_cfg_const.led_support)
     {
@@ -1831,7 +1832,7 @@ static void app_led_ipc_device_event_cback(uint32_t event, void *msg)
 {
     APP_PRINT_INFO1("app_led_ipc_event_cback: event %x", event);
 
-    app_led_check_charging_mode(0); //LED mode has higher priority
+   // app_led_check_charging_mode(0); //LED mode has higher priority
     app_led_check_repeat_mode();
 #if F_APP_TEAMS_GLOBAL_MUTE_SUPPORT
     teams_extend_led_check_mode();
