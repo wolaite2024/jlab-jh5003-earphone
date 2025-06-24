@@ -717,9 +717,9 @@ static void app_set_dongle_vol(void)
 	uint8_t pair_idx_mapping;
 	static uint8_t pre_curr_volume = 0;
 	static uint8_t set_vol_flag = 0;
-    if(app_cfg_nv.allowed_source != ALLOWED_SOURCE_BT_24G || app_hfp_get_call_status()     < APP_CALL_ACTIVE)
+    if(app_cfg_nv.allowed_source != ALLOWED_SOURCE_BT_24G)
     {
-         APP_PRINT_ERROR0("live    source not ALLOWED_SOURCE_BT_24G");
+          APP_PRINT_INFO2("live app_get_dongle_vol allowed_source    = %d  hfp status = %d  ", app_cfg_nv.allowed_source,app_hfp_get_call_status()     );
         return;
 	}
     if (app_bond_get_pair_idx_mapping(app_db.br_link[dongle_link->id].bd_addr, &pair_idx_mapping) == false)
@@ -734,13 +734,14 @@ static void app_set_dongle_vol(void)
     }
     audio_track_volume_out_get(app_db.br_link[dongle_link->id].a2dp_track_handle, &curr_volume);
 	audio_track_volume_out_get(app_db.br_link[phone_link->id].sco_track_handle, &phone_curr_volume);
-    APP_PRINT_INFO2("live app_get_dongle_vol curr_volume    = %d phone_curr_volume = %d  ", curr_volume,phone_curr_volume);
-   if(app_hfp_get_call_status()     != APP_CALL_IDLE && (!set_vol_flag))
+    APP_PRINT_INFO4("live app_get_dongle_vol curr_volume    = %d phone_curr_volume = %d app_hfp_get_call_status = %d set_vol_flag = %d ", 
+		curr_volume,phone_curr_volume,app_hfp_get_call_status(),set_vol_flag);
+   if(app_hfp_get_call_status()     != APP_CALL_IDLE && (!set_vol_flag) && (app_db.br_link[phone_link->id].sco_track_handle != NULL))
    {
+       APP_PRINT_INFO2("live app_set_dongle_vol0 curr_volume    = %d pre_curr_volume = %d",4,pre_curr_volume);
        pre_curr_volume = curr_volume;
 	   set_vol_flag = 1;
-       audio_track_volume_out_set(app_db.br_link[dongle_link->id].a2dp_track_handle, 4); 
-	   APP_PRINT_INFO2("live app_set_dongle_vol0 curr_volume    = %d pre_curr_volume = %d",4,pre_curr_volume);
+       audio_track_volume_out_set(app_db.br_link[dongle_link->id].a2dp_track_handle, 4);    
    }
   else if(app_hfp_get_call_status()     == APP_CALL_IDLE && set_vol_flag)
    	{
@@ -756,7 +757,6 @@ void app_set_dongle_vol_call(uint8_t startflag)
     uint8_t curr_volume,phone_curr_volume;
 	uint8_t pair_idx_mapping;
 	static uint8_t pre_curr_volume = 0;
-	static uint8_t set_vol_flag = 0;
     if(app_cfg_nv.allowed_source != ALLOWED_SOURCE_BT_24G)
     {
          APP_PRINT_ERROR0("live    source not ALLOWED_SOURCE_BT_24G");
@@ -773,19 +773,17 @@ void app_set_dongle_vol_call(uint8_t startflag)
         return;
     }
     audio_track_volume_out_get(app_db.br_link[dongle_link->id].a2dp_track_handle, &curr_volume);
-	audio_track_volume_out_get(app_db.br_link[phone_link->id].sco_track_handle, &phone_curr_volume);
+	audio_track_volume_out_get(app_db.br_link[phone_link->id].a2dp_track_handle, &phone_curr_volume);
     APP_PRINT_INFO2("live app_set_dongle_vol_call curr_volume    = %d phone_curr_volume = %d  ", curr_volume,phone_curr_volume);
 	 APP_PRINT_INFO2("live app_set_dongle_vol_call restore_dongle_recording    = %d dongle_is_enable_mic = %d  ", app_db.restore_dongle_recording,app_db.dongle_is_enable_mic);
 	   if(startflag)
 	   {
-	       pre_curr_volume = curr_volume;
-		   set_vol_flag = 1;
+	       pre_curr_volume = phone_curr_volume;		
 	       audio_track_volume_out_set(app_db.br_link[phone_link->id].a2dp_track_handle, 4); 
 		   APP_PRINT_INFO2("live app_set_dongle_vol_call0 curr_volume    = %d pre_curr_volume = %d",4,pre_curr_volume);
 	   }
 	  else 
 	   	{
-	       set_vol_flag = 0;
 		   audio_track_volume_out_set(app_db.br_link[phone_link->id].a2dp_track_handle, pre_curr_volume); 
 		   APP_PRINT_INFO1("live app_set_dongle_vol_call1 pre_curr_volume    = %d", pre_curr_volume);
 	    }
@@ -1030,7 +1028,7 @@ static void app_hfp_bt_cback(T_BT_EVENT event_type, void *event_buf, uint16_t bu
            APP_PRINT_INFO2("live event_type    = %x hfp curr_status %d", event_type,
                     param->hfp_call_status.curr_status);
             p_link = app_link_find_br_link(param->hfp_call_status.bd_addr);
-			app_set_dongle_vol();
+			
             if (p_link != NULL)
             {
                 switch (param->hfp_call_status.curr_status)
@@ -1716,10 +1714,9 @@ void app_hfp_set_call_status(T_APP_CALL_STATUS call_status)
     bool get_pair_idx = app_bond_get_pair_idx_mapping(app_db.br_link[active_idx].bd_addr,
                                                       &pair_idx_mapping);
 
-    APP_PRINT_TRACE2("app_hfp_set_call_status: %d -> %d", pre_call_status, call_status);
-
+    APP_PRINT_TRACE2("app_hfp_set_call_status: %d -> %d", pre_call_status, call_status);   
     app_call_status = call_status;
-
+    app_set_dongle_vol();
     if (call_status != pre_call_status)
     {
         app_roleswap_ctrl_check(APP_ROLESWAP_CTRL_EVENT_CALL_STATUS_CHAGNED);

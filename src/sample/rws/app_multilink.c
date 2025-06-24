@@ -584,8 +584,8 @@ bool app_multi_a2dp_active_link_set(uint8_t *bd_addr)
         {
             uint8_t pair_idx_mapping;
             app_bond_get_pair_idx_mapping(bd_addr, &pair_idx_mapping);
-            audio_track_volume_out_set(app_db.br_link[active_a2dp_idx].a2dp_track_handle,
-                                       app_cfg_nv.audio_gain_level[pair_idx_mapping]);
+           // audio_track_volume_out_set(app_db.br_link[active_a2dp_idx].a2dp_track_handle,
+                        //               app_cfg_nv.audio_gain_level[pair_idx_mapping]);
             app_audio_track_spk_unmute(AUDIO_STREAM_TYPE_PLAYBACK);
             if (app_db.remote_session_state == REMOTE_SESSION_STATE_CONNECTED)
             {

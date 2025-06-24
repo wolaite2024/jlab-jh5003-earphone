@@ -540,8 +540,43 @@ void app_dongle_source_ctrl_evt_handler(T_SOURCE_CTRL_EVENT event)
     }
 
 }
+static void app_dongle_source_ctrl_bt_cback(T_BT_EVENT event_type, void *event_buf,
+                                            uint16_t buf_len)
+{
+    bool handle = true;
+    T_BT_EVENT_PARAM *param = event_buf;
+
+    switch (event_type)
+    {
+    case BT_EVENT_HFP_CONN_CMPL:
+        {
+            T_APP_BR_LINK *p_link = app_link_find_br_link(param->hfp_conn_cmpl.bd_addr);
+
+            if (p_link && !app_link_check_dongle_link(p_link->bd_addr))
+            {
+                uint32_t plan_profs = (A2DP_PROFILE_MASK | AVRCP_PROFILE_MASK);
+
+                if (app_cfg_nv.allowed_source == ALLOWED_SOURCE_24G && (p_link->connected_profile & plan_profs))
+                {
+                    app_bt_policy_disconnect(p_link->bd_addr, plan_profs);
+                }
+            }
+        }
+        break;
+
+    default:
+        handle = false;
+        break;
+    }
+
+    if (handle)
+   {
+        APP_PRINT_TRACE1("app_dongle_source_ctrl_bt_cback: event 0x%04x", event_type);
+    }
+}
 
 void app_dongle_source_ctrl_init(void)
 {
+  bt_mgr_cback_register(app_dongle_source_ctrl_bt_cback);
 }
 #endif

@@ -1809,6 +1809,7 @@ void app_mmi_hf_end_active_call(void)
         bt_hfp_call_terminate_req(app_db.br_link[active_hf_idx].bd_addr);
     }
 }
+extern void wlt_ui_timer_start(void);
 
 void app_mmi_handle_action(uint8_t action)
 {
@@ -2566,7 +2567,7 @@ void app_mmi_handle_action(uint8_t action)
                 sys_mgr_power_on();
             }
 
-			extern void wlt_ui_timer_start(void);
+			
 			wlt_ui_timer_start();
         }
         break;
@@ -2690,6 +2691,7 @@ void app_mmi_handle_action(uint8_t action)
                 app_gfps_le_force_enter_pairing_mode(GFPS_KEY_FORCE_ENTER_PAIR_MODE);
             }
 #endif
+           wlt_ui_timer_start();
         }
         break;
 
@@ -2802,10 +2804,10 @@ void app_mmi_handle_action(uint8_t action)
     case MMI_DEV_SPK_VOL_UP:
         {
             app_key_set_volume_status(true);
-			if (app_cfg_nv.allowed_source == ALLOWED_SOURCE_BT_24G)
+			if (app_cfg_nv.allowed_source == ALLOWED_SOURCE_BT_24G && (app_link_get_b2s_link_num()>= 2) )
 			 	   app_mmi_volume_up_mixing(1);
              else
-            app_mmi_volume_up();
+                  app_mmi_volume_up();
         }
         break;
 
@@ -2820,7 +2822,7 @@ void app_mmi_handle_action(uint8_t action)
                 break;
             }
             app_key_set_volume_status(true);
-		if (app_cfg_nv.allowed_source == ALLOWED_SOURCE_BT_24G)
+		if (app_cfg_nv.allowed_source == ALLOWED_SOURCE_BT_24G && (app_link_get_b2s_link_num()>= 2) )
 			 app_mmi_volume_up_mixing(0);
           else
             app_mmi_volume_down();

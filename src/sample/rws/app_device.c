@@ -955,7 +955,12 @@ static void app_device_link_policy_ind(T_BP_EVENT event, T_BP_EVENT_PARAM *event
                         }
                         else
                         {
-                            app_audio_tone_type_play(TONE_LINK_CONNECTED, false, true);
+                           if(!app_link_check_dongle_link(event_param->bd_addr))
+                                app_audio_tone_type_play(TONE_LINK_CONNECTED, false, true);
+						   else
+						    	app_audio_tone_type_play(TONE_APT_VOL_3, false, true);
+						   	
+						   
                         }
 #endif
 

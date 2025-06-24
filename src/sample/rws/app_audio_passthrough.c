@@ -1618,7 +1618,7 @@ void app_apt_play_apt_volume_tone(void)
     }
     else if ((app_cfg_nv.apt_volume_out_level >= 3) && (app_cfg_nv.apt_volume_out_level < 10))
     {
-        apt_vol_tone = (T_APP_AUDIO_TONE_TYPE)((TONE_APT_VOL_3) + (app_cfg_nv.apt_volume_out_level - 3));
+        apt_vol_tone = (T_APP_AUDIO_TONE_TYPE)((TONE_APT_VOL_2) + (app_cfg_nv.apt_volume_out_level - 3));
     }
 
     if (apt_vol_tone != TONE_TYPE_MAX)

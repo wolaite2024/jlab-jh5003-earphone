@@ -3874,6 +3874,7 @@ static void app_bt_policy_state_afe_linkback_event_handle(T_EVENT event, T_BT_PA
     }
 }
 
+uint8_t Linklostflag = 0;
 static void app_bt_policy_state_afe_stable_event_handle(T_EVENT event)
 {
     if (app_cfg_nv.bud_role == REMOTE_SESSION_ROLE_SECONDARY)
@@ -3928,7 +3929,8 @@ static void app_bt_policy_state_afe_stable_event_handle(T_EVENT event)
         case EVENT_BUD_DISCONN_LOST:
             {
                 linkback_retry_timeout = app_cfg_const.timer_link_back_loss;
-
+                Linklostflag = 1;
+				APP_PRINT_TRACE2("live linkloss : Linklostflag ret %d ", Linklostflag);
                 app_bt_policy_enter_state(STATE_AFE_TIMEOUT_SHAKING, BT_DEVICE_MODE_IDLE);
             }
             break;
@@ -4847,8 +4849,15 @@ static void app_bt_policy_stable_sched(T_STABLE_ENTER_MODE mode)
 #if F_APP_LEGACY_DONGLE_BINDING || F_APP_LEA_DONGLE_BINDING
                         dongle_pairing_non_intentionally = true;
 #endif
-
-                        app_bt_policy_enter_state(STATE_AFE_PAIRING_MODE, BT_DEVICE_MODE_DISCOVERABLE_CONNECTABLE);
+                        if(Linklostflag)
+                        {
+                           Linklostflag = 0;
+                           app_mmi_handle_action(MMI_DEV_POWER_OFF);
+						}
+						else
+                        {
+                           app_bt_policy_enter_state(STATE_AFE_PAIRING_MODE, BT_DEVICE_MODE_DISCOVERABLE_CONNECTABLE);
+						}
 #if F_APP_DURIAN_SUPPORT
                         app_durian_mmi_adv_enter_pairing();
 #endif
