@@ -502,6 +502,7 @@ typedef struct
             uint8_t delay_to_open_anc_when_power_on_reserve : 3;
         };
     };
+	uint8_t sidetoneflag:1;
 } T_APP_CFG_NV;
 
 /** @brief  Read only configurations for inbox audio application */

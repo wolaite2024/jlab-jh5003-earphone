@@ -387,7 +387,7 @@ void app_device_factory_reset(void)
     app_ha_clear_param();
 #endif
 }
-
+extern uint8_t Linklostflag ;
 static void app_device_link_policy_ind(T_BP_EVENT event, T_BP_EVENT_PARAM *event_param)
 {
     APP_PRINT_INFO1("app_device_link_policy_ind: event 0x%02x", event);
@@ -479,7 +479,14 @@ static void app_device_link_policy_ind(T_BP_EVENT event, T_BP_EVENT_PARAM *event
                         }
                         else
                         {
-                            app_auto_power_off_enable(AUTO_POWER_OFF_MASK_LINKBACK, app_cfg_const.timer_auto_power_off);
+                          if (!Linklostflag)
+                           {
+                              app_auto_power_off_enable(AUTO_POWER_OFF_MASK_LINKBACK, app_cfg_const.timer_auto_power_off);
+                          	}
+						   else
+						   	{
+                              app_auto_power_off_enable(AUTO_POWER_OFF_MASK_LINKBACK, app_cfg_const.timer_link_back_loss);
+						    }
                         }
 
 #if F_APP_ERWS_SUPPORT
@@ -955,7 +962,7 @@ static void app_device_link_policy_ind(T_BP_EVENT event, T_BP_EVENT_PARAM *event
                         }
                         else
                         {
-                           if(!app_link_check_dongle_link(event_param->bd_addr))
+                           if(!app_link_check_dongle_link(event_param->bd_addr) && app_hfp_get_call_status() != APP_CALL_ACTIVE)
                                 app_audio_tone_type_play(TONE_LINK_CONNECTED, false, true);
 						   else
 						    	app_audio_tone_type_play(TONE_APT_VOL_3, false, true);

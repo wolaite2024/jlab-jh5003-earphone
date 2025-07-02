@@ -2654,13 +2654,19 @@ static void app_key_check_press(T_KEY_CHECK key_check)
                 {
                     T_APP_CHARGER_STATE app_charger_state;
                     uint8_t state_of_charge;
-
+                     uint8_t pin_num;
+					 uint8_t gpio_status;
+				    pin_num = app_cfg_const.line_in_pinmux;
+			    	gpio_status = hal_gpio_get_input_level(pin_num);
                     app_charger_state = app_charger_get_charge_state();
                     state_of_charge = app_charger_get_soc();
-                    if ((app_charger_state == APP_CHARGER_STATE_NO_CHARGE) && (state_of_charge == BAT_CAPACITY_0))
+					APP_PRINT_TRACE3("app_key_check_press:  %d, cap %d gpio_status  %d ",
+                                 app_charger_state, state_of_charge,gpio_status);
+                    if (((app_charger_state == APP_CHARGER_STATE_NO_CHARGE) && (state_of_charge == BAT_CAPACITY_0)) || !gpio_status)
                     {
                         return;
                     }
+					
                 }
 
                 if (app_cfg_const.charging_disallow_power_on)
@@ -2706,14 +2712,17 @@ static void app_key_check_press(T_KEY_CHECK key_check)
                                     key_timer_id, APP_TIMER_KEY_POWER_ON_LONG_PRESS, key, false,
                                     app_cfg_const.key_power_on_interval * KEY_TIMER_UNIT_MS);
                 }
-
+                 extern uint8_t get_swtich_position(void);
                 if ((app_cfg_const.key_enter_pairing_interval != 0) &&
                     ((app_cfg_const.key_disable_power_on_off == 0) ||
                      (app_cfg_nv.factory_reset_done == 0))) //Long press power enter pairing
                 {
-                    app_start_timer(&timer_idx_key_enter_pairing, "key_enter_pairing",
+                    if(get_swtich_position())
+                    {
+                      app_start_timer(&timer_idx_key_enter_pairing, "key_enter_pairing",
                                     key_timer_id, APP_TIMER_KEY_ENTER_PAIRING, key, false,
                                     app_cfg_const.key_enter_pairing_interval * KEY_TIMER_UNIT_MS);
+                	}
                 }
 
                 if ((app_cfg_const.enable_factory_reset_when_in_the_box == 0) ||

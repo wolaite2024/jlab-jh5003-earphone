@@ -2371,7 +2371,16 @@ void app_listening_special_event_trigger(T_LISTENING_SPECIAL_EVENT enter_special
                         }
                     }
 #endif
-
+        if(app_cfg_nv.sidetoneflag)   //live add 20230421
+		{
+		   close_listening = true;
+		   APP_PRINT_TRACE0("live sidetone open !!!!!");
+        }
+	    else
+		{
+		    close_listening = false;
+		    APP_PRINT_TRACE0("live sidetone close !!!!!");
+	    }
             if (close_listening)
             {
                 if (app_db.current_listening_state != ANC_OFF_APT_OFF)

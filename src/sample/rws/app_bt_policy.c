@@ -253,6 +253,7 @@ typedef enum
     APP_TIMER_ROLESWAP                        = 0x12,
     APP_TIMER_SET_CPU_CLK                     = 0x13,
     APP_TIMER_LINKBACK_LEA                    = 0x14,
+    APP_TIMER_DONGLE_PAIRING_MODE             = 0x15,
 } T_APP_BT_POLICY_TIMER;
 typedef struct
 {
@@ -306,6 +307,8 @@ static uint8_t timer_idx_role_switch[MAX_BR_LINK_NUM] = {0};
 static uint8_t timer_idx_later_avrcp[MAX_BR_LINK_NUM] = {0};
 static uint8_t timer_idx_check_role_switch[MAX_BR_LINK_NUM] = {0};
 static uint8_t timer_idx_later_hid[MAX_BR_LINK_NUM] = {0};
+static uint8_t timer_idx_dongle_pairing_mode = 0;
+
 
 static bool rws_link_lost = false;
 
@@ -3875,6 +3878,8 @@ static void app_bt_policy_state_afe_linkback_event_handle(T_EVENT event, T_BT_PA
 }
 
 uint8_t Linklostflag = 0;
+bool get_dongle_connect_record_flag(void);
+
 static void app_bt_policy_state_afe_stable_event_handle(T_EVENT event)
 {
     if (app_cfg_nv.bud_role == REMOTE_SESSION_ROLE_SECONDARY)
@@ -3930,7 +3935,7 @@ static void app_bt_policy_state_afe_stable_event_handle(T_EVENT event)
             {
                 linkback_retry_timeout = app_cfg_const.timer_link_back_loss;
                 Linklostflag = 1;
-				APP_PRINT_TRACE2("live linkloss : Linklostflag ret %d ", Linklostflag);
+				APP_PRINT_TRACE1("live linkloss : Linklostflag ret %d ", Linklostflag);
                 app_bt_policy_enter_state(STATE_AFE_TIMEOUT_SHAKING, BT_DEVICE_MODE_IDLE);
             }
             break;
@@ -3978,7 +3983,10 @@ static void app_bt_policy_state_afe_stable_event_handle(T_EVENT event)
 
         case EVENT_SRC_DISCONN_LOST:
             {
-                app_bt_policy_enter_state(STATE_AFE_LINKBACK, BT_DEVICE_MODE_CONNECTABLE);
+                //linkback_retry_timeout = app_cfg_const.timer_link_back_loss;                      
+                 Linklostflag = 1;                            
+			     APP_PRINT_TRACE1("live linkloss1 : Linklostflag ret %d ", Linklostflag);   
+			     app_bt_policy_enter_state(STATE_AFE_LINKBACK, BT_DEVICE_MODE_CONNECTABLE);
             }
             break;
 
@@ -4775,6 +4783,7 @@ static bool app_bt_policy_check_enter_standby(void)
 }
 #endif
 
+
 static void app_bt_policy_stable_sched(T_STABLE_ENTER_MODE mode)
 {
     app_bt_policy_stable_enter_mode(mode);
@@ -4849,14 +4858,23 @@ static void app_bt_policy_stable_sched(T_STABLE_ENTER_MODE mode)
 #if F_APP_LEGACY_DONGLE_BINDING || F_APP_LEA_DONGLE_BINDING
                         dongle_pairing_non_intentionally = true;
 #endif
-                        if(Linklostflag)
+                        if(Linklostflag && (!get_dongle_connect_record_flag()))
                         {
                            Linklostflag = 0;
                            app_mmi_handle_action(MMI_DEV_POWER_OFF);
 						}
 						else
                         {
-                           app_bt_policy_enter_state(STATE_AFE_PAIRING_MODE, BT_DEVICE_MODE_DISCOVERABLE_CONNECTABLE);
+                          if(app_cfg_nv.allowed_source != 0)
+                           {
+                             app_bt_policy_enter_state(STATE_AFE_PAIRING_MODE, BT_DEVICE_MODE_DISCOVERABLE_CONNECTABLE);
+                           }
+						  else
+						  	{
+						  	   //app_auto_power_off_enable(AUTO_POWER_OFF_MASK_POWER_ON, app_cfg_const.timer_link_back_loss);
+						  	   app_bt_policy_enter_state(STATE_AFE_STANDBY, BT_DEVICE_MODE_CONNECTABLE);
+                               APP_PRINT_TRACE1("live app_cfg_nv.allowed_source =   %d,",app_cfg_nv.allowed_source);
+						    }
 						}
 #if F_APP_DURIAN_SUPPORT
                         app_durian_mmi_adv_enter_pairing();
@@ -5476,7 +5494,7 @@ static bool app_bt_policy_bt_event_pre_handle(T_EVENT event, T_BT_PARAM *param)
             is_authed = app_bt_policy_connected_node_is_authed(param->bd_addr);
             is_first_src = app_bt_policy_b2s_connected_is_first_src(param->bd_addr);
             is_b2s_connected_vp_played = app_bt_policy_b2s_connected_vp_played(param->bd_addr);
-
+             
 #if F_APP_SINGLE_MUTLILINK_SCENERIO_1
             T_APP_BR_LINK *p_teams_link = app_link_find_br_link(param->bd_addr);
             if (p_teams_link)
@@ -5490,7 +5508,8 @@ static bool app_bt_policy_bt_event_pre_handle(T_EVENT event, T_BT_PARAM *param)
                 app_multilink_customer_handle_link_disconnected(p_speaker_link->id);
             }
 #endif
-
+         // Linklostflag = 1;
+		   APP_PRINT_TRACE2("live linkloss2 : Linklostflag  %d app_cfg_const.enable_dongle_dual_mode %d ", Linklostflag,app_cfg_const.enable_dongle_dual_mode);  
             app_sniff_mode_b2s_check_left_flag_when_disconnect(param->bd_addr);
 
             if (app_bt_policy_b2s_connected_del_node(param->bd_addr))
@@ -6367,7 +6386,18 @@ static void app_bt_policy_timer_cback(uint8_t timer_evt, uint16_t param)
             app_bt_policy_state_machine(EVENT_PAIRING_MODE_TIMEOUT, NULL);
         }
         break;
-
+    case APP_TIMER_DONGLE_PAIRING_MODE:
+		{
+		// T_APP_BR_LINK *p_dongle_link = app_dongle_get_connected_dongle_link();
+		//  uint32_t handle_prof = A2DP_PROFILE_MASK | AVRCP_PROFILE_MASK;
+		  APP_PRINT_INFO1("APP_TIMER_DONGLE_PAIRING_MODE:state %d", app_dongle_get_state()); 
+		   app_stop_timer(&timer_idx_dongle_pairing_mode);
+	       app_bt_policy_enter_state(STATE_AFE_LINKBACK, BT_DEVICE_MODE_CONNECTABLE);
+		   app_start_timer(&timer_idx_pairing_mode, "dongle_linkback",
+                                    bt_policy_timer_id, APP_TIMER_PAIRING_MODE, 0, false,
+                                    app_cfg_const.timer_pairing_timeout * 1000);
+		break;
+    	}
     case APP_TIMER_DISCOVERABLE:
         {
             app_stop_timer(&timer_idx_discoverable);
@@ -8435,6 +8465,8 @@ bool app_bt_policy_is_pairing(void)
     }
 }
 
+
+
 bool app_bt_policy_listening_allow_poweroff(void)
 {
 #if F_APP_LISTENING_MODE_SUPPORT
@@ -8502,3 +8534,11 @@ void app_bt_policy_init(void)
     }
 #endif
 }
+
+void start_dongle_pairing_timer(void)
+{
+   app_start_timer(&timer_idx_dongle_pairing_mode, "dongle_pairing_mode",
+                            bt_policy_timer_id, APP_TIMER_DONGLE_PAIRING_MODE, 0, false,
+                            60 * 1000);
+}
+

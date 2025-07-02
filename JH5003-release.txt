@@ -4,6 +4,11 @@
 1.修改第一次bt连接后播报电池电池。
 2.修改区分bt、dongle连接tone。
 3.修改linkloss 回连超时关机。
+4.修改充放电。
+5.识别AUX IN输入后自动关闭蓝牙设备和添加vp；
+6.拔出AUX IN后自动关机；
+7.dongle mode增加5击 进入配对。
+8.修改单dongle配对记录进去可连接状态。
 
 
 dongle更新日志：

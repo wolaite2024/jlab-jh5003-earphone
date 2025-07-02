@@ -681,6 +681,7 @@ uint8_t app_link_get_connected_src_num(void)
 
     /* br link src */
     num += app_link_get_b2s_link_num();
+	APP_PRINT_TRACE1("app_link_get_connected_src_num: conn num %d", num);
 
 #if F_APP_LEA_SUPPORT
     /* lea link src and exclude the link with same br addr src link */

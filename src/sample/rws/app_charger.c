@@ -115,6 +115,7 @@ static void app_charger_clear_smooth_bat_handle(void)
     app_stop_timer(&timer_idx_smooth_bat_report);
     min_discharge_bat_vol = 0;
     last_report_discharge_bat_vol = 0;
+	APP_PRINT_WARN0("app_charger_clear_smooth_bat_handle !!!!");
 }
 
 static void app_charger_bat_history_enqueue(uint8_t bat_vol)
@@ -205,6 +206,7 @@ static T_APP_SMOOTH_BAT_VOL app_charger_smooth_bat_discharge(uint8_t origin_vol,
 
         app_charger_bat_history_enqueue(origin_vol);
     }
+	APP_PRINT_TRACE1("app_charger_smooth_bat_discharge charger_state= %d", charger_state);
 
     if (charger_state == APP_CHARGER_STATE_NO_CHARGE) //discharge
     {
@@ -218,6 +220,7 @@ static T_APP_SMOOTH_BAT_VOL app_charger_smooth_bat_discharge(uint8_t origin_vol,
         {
             min_discharge_bat_vol = *new_vol;
             last_report_discharge_bat_vol = *new_vol;
+			APP_PRINT_TRACE3("min_discharge_bat_vol %d %d %d", min_discharge_bat_vol,last_report_discharge_bat_vol,timer_idx_smooth_bat_report);
         }
         else
         {
@@ -230,6 +233,7 @@ static T_APP_SMOOTH_BAT_VOL app_charger_smooth_bat_discharge(uint8_t origin_vol,
 
                 if (timer_idx_smooth_bat_report == 0)
                 {
+                   APP_PRINT_TRACE2("min_discharge_bat_vol %d %d", min_discharge_bat_vol,last_report_discharge_bat_vol);
                     /* start a timer to smooth bat consumption report */
                     app_start_timer(&timer_idx_smooth_bat_report, "smooth_bat_report",
                                     charger_timer_id, APP_TIMER_SMOOTH_BAT_REPORT, 0, true,
@@ -238,6 +242,7 @@ static T_APP_SMOOTH_BAT_VOL app_charger_smooth_bat_discharge(uint8_t origin_vol,
             }
             else
             {
+                APP_PRINT_TRACE1(" new_vol > min_discharge_bat_vol = %d   !!!",min_discharge_bat_vol);
                 /* ignore ping-ping effect */
             }
             report = APP_SMOOTH_BAT_VOL_DISALLOW;
@@ -432,10 +437,18 @@ static void app_charger_timeout_cb(uint8_t timer_evt, uint16_t param)
 #if F_APP_SMOOTH_BAT_REPORT
     case APP_TIMER_SMOOTH_BAT_REPORT:
         {
+           T_APP_CHARGER_STATE app_charger_state;
+
+           app_charger_state = app_charger_get_charge_state();
+           APP_PRINT_WARN0("discharger_timer_callback: APP_TIMER_SMOOTH_BAT_REPORT");
             app_charger_handle_soc(last_report_discharge_bat_vol, 0);
 
             if (last_report_discharge_bat_vol > min_discharge_bat_vol)
             {
+			  app_start_timer(&timer_idx_smooth_bat_report, "smooth_bat_report",
+                                    charger_timer_id, APP_TIMER_SMOOTH_BAT_REPORT, 0, true,
+                                    BAT_SMOOTH_TIMEOUT * 1000);
+			  
                 if (last_report_discharge_bat_vol > 0)
                 {
                     last_report_discharge_bat_vol--;
@@ -443,7 +456,14 @@ static void app_charger_timeout_cb(uint8_t timer_evt, uint16_t param)
             }
             else
             {
-                app_stop_timer(&timer_idx_smooth_bat_report);
+              if (app_charger_state == APP_CHARGER_STATE_NO_CHARGE)
+                 {
+                   app_stop_timer(&timer_idx_smooth_bat_report);
+              	 }
+			  else
+			  	{
+                   app_charger_clear_smooth_bat_handle();
+			    }
             }
         }
         break;
@@ -1031,7 +1051,7 @@ void app_charger_init(void)
 #if RTK_CHARGER_ENABLE
     rtk_charger_init(app_charger_state_cb, app_charger_soc_cb);
 #endif
-
+     APP_PRINT_TRACE0("app_charger_init live   ");
     app_timer_reg_cb(app_charger_timeout_cb, &charger_timer_id);
 
     if (app_cfg_const.discharger_support)

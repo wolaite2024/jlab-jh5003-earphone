@@ -236,6 +236,7 @@ static uint8_t app_gaming_freq_handle = 0;
 #if F_APP_FINDMY_FEATURE_SUPPORT
 static uint8_t timer_idx_put_sn_state = 0;
 #endif
+extern void start_dongle_pairing_timer(void);
 
 #if F_APP_MUTILINK_TRIGGER_HIGH_PRIORITY
 uint8_t app_mmi_get_highest_priority_index(uint32_t profile_mask);
@@ -1233,7 +1234,7 @@ void app_mmi_switch_gaming_mode()
     malleus_effect_trig();
 #endif
 
-    app_led_change_mode(LED_MODE_GAMING_MODE, true, false);
+    //app_led_change_mode(LED_MODE_GAMING_MODE, true, false);
     (void) app_bt_sniffing_set_low_latency();
 
     if (app_cfg_nv.bud_role == REMOTE_SESSION_ROLE_SECONDARY)
@@ -1810,6 +1811,7 @@ void app_mmi_hf_end_active_call(void)
     }
 }
 extern void wlt_ui_timer_start(void);
+extern void switch_3_mmi(void);
 
 void app_mmi_handle_action(uint8_t action)
 {
@@ -2523,6 +2525,7 @@ void app_mmi_handle_action(uint8_t action)
 
     case MMI_DEV_POWER_ON:
         {
+             switch_3_mmi();
             if ((!app_db.bt_is_ready || !app_db.ble_is_ready) && (mp_hci_test_mode_is_running() == false))
             {
                 app_cfg_nv.app_is_power_on = 1;
@@ -2582,7 +2585,12 @@ void app_mmi_handle_action(uint8_t action)
                 app_adc_ntc_voltage_read_stop();
 #endif
 
+				extern void wlt_ui_timer_stop(void);
+						wlt_ui_timer_stop();
+
 #if F_APP_LEA_SUPPORT
+				
+
                 app_lea_mgr_mmi_handle(MMI_DEV_POWER_OFF);
 #endif
 
@@ -2617,8 +2625,7 @@ void app_mmi_handle_action(uint8_t action)
                     app_sniff_mode_disable_all();
                     app_mmi_power_off();
                 }
-				extern void wlt_ui_timer_stop(void);
-				wlt_ui_timer_stop();
+				
 				
             }
         }
@@ -2627,6 +2634,9 @@ void app_mmi_handle_action(uint8_t action)
     case MMI_DEV_FORCE_ENTER_PAIRING_MODE:
     case MMI_DEV_ENTER_PAIRING_MODE:
         {
+       
+		  switch_3_mmi();
+          wlt_ui_timer_start();
 #if F_APP_SINGLE_MUTLILINK_SCENERIO_1
             if (app_teams_multilink_get_voice_status() != APP_CALL_IDLE)
 #else
@@ -2691,7 +2701,7 @@ void app_mmi_handle_action(uint8_t action)
                 app_gfps_le_force_enter_pairing_mode(GFPS_KEY_FORCE_ENTER_PAIR_MODE);
             }
 #endif
-           wlt_ui_timer_start();
+           
         }
         break;
 
@@ -3962,13 +3972,43 @@ void app_mmi_handle_action(uint8_t action)
 
     case MMI_OUTPUT_INDICATION2_TOGGLE:
         {
-            app_mmi_execute_output_indication_action(MMI_OUTPUT_INDICATION2_TOGGLE);
+           if((app_cfg_nv.allowed_source == ALLOWED_SOURCE_24G) && (app_dongle_get_connected_dongle_link() == NULL))
+		   {
+
+                 dongle_ctrl_data.force_pairing_triggered = true;
+                 if (app_dongle_get_state() == DONGLE_STATE_PAIRING)
+                   {
+                       app_dongle_adv_start(true);
+                   }
+                   else
+                   {
+                       app_dongle_state_machine(DONGLE_EVENT_PAIRING);
+                   }
+                 dongle_ctrl_data.force_pairing_triggered = false;
+		     	 APP_PRINT_INFO1("dongle_rf_mode = %d, ", app_cfg_nv.dongle_rf_mode);
+			     app_led_change_mode(LED_MODE_GAMING_MODE, true, false);			
+			     start_dongle_pairing_timer();
+					 
+           }
+           // app_mmi_execute_output_indication_action(MMI_OUTPUT_INDICATION2_TOGGLE);
         }
         break;
 
     case MMI_OUTPUT_INDICATION3_TOGGLE:
         {
-            app_mmi_execute_output_indication_action(MMI_OUTPUT_INDICATION3_TOGGLE);
+             if(app_cfg_nv.sidetoneflag == 0)
+			 {
+			   app_cfg_nv.sidetoneflag = 1;
+			   app_audio_tone_type_play(TONE_IN_EAR_DETECTION, false, false);
+             }
+			 else
+			 {
+			   app_cfg_nv.sidetoneflag = 0;
+			   app_audio_tone_type_play(TONE_APT_EQ_8, false, false);
+			 }
+
+			 APP_PRINT_INFO1("sidetoneflag = %d, ", app_cfg_nv.sidetoneflag);
+            //app_mmi_execute_output_indication_action(MMI_OUTPUT_INDICATION3_TOGGLE);
         }
         break;
 

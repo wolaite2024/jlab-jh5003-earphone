@@ -47,9 +47,10 @@ static uint8_t app_ui_timer_id = 0;
 static uint8_t app_adc_timer_id = 0;
 
 static uint8_t timer_idx_ui_switch = 0;
-static bool adc_vbat_ntc_voltage_init = false;
+bool adc_vbat_ntc_voltage_init = false;
 static uint8_t timer_idx_adc_read_vbat_ntc_voltage = 0;
 static uint8_t adc_channel_vbat_ntc_voltage = 0;
+uint32_t voltage_battery = 0;
 static uint32_t temperature_battery = 0;
  bool wlt_time_ui_init = false;
 
@@ -85,6 +86,7 @@ void MIC_MUTE_MMI(void)
     }
 }
 
+
 void switch_3_mmi(void)
 {
      static uint8_t pre_action = 0;
@@ -113,13 +115,35 @@ void switch_3_mmi(void)
            app_mmi_handle_action(MMI_24G_BT_AUDIO_SOURCE_SWITCH);
 
 	}
-	
+	 
+}
+
+uint8_t get_swtich_position(void)
+{
+  uint8_t S_position = 0;
+    Initialize_switch_ui();
+   if (hal_gpio_get_input_level(PIN_2_4G_SWITCH) == 0)
+	{
+	     S_position = 0;
+	}
+	else if (hal_gpio_get_input_level(PIN_2_4G_BT_SWITCH) == 0)
+	{ 
+	   
+		  S_position = 1; 
+    }
+	else if (hal_gpio_get_input_level(BT_SWITCH) == 0 )
+	{
+	     
+        S_position = 2;
+	}
+	APP_PRINT_INFO1("get_swtich_position   : %d",S_position);
+	return S_position;
 }
 static void app_ui_timeout_cb(uint8_t timer_evt, uint16_t param)
 {
   
     switch_3_mmi();
-	MIC_MUTE_MMI();
+	//MIC_MUTE_MMI();
 
 }
 
@@ -133,8 +157,8 @@ void Initialize_charge(void)
     Pad_Config(CHG_ISET, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_UP, PAD_OUT_ENABLE, PAD_OUT_HIGH);
 		Pinmux_Config(CHG_OFF, DWGPIO);
 	Pad_Config(CHG_OFF, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_NONE, PAD_OUT_DISABLE, PAD_OUT_HIGH);
-		Pinmux_Config(MIC_MUTE, DWGPIO);
-	Pad_Config(MIC_MUTE, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_UP, PAD_OUT_DISABLE, PAD_OUT_HIGH);
+		//Pinmux_Config(MIC_MUTE, DWGPIO);
+	//Pad_Config(MIC_MUTE, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_UP, PAD_OUT_DISABLE, PAD_OUT_HIGH);
 
 }
 uint8_t HiLowChargeFlag = 0 ;
@@ -165,8 +189,8 @@ T_CHARGER_STATE get_charge_status(void)
     }
   }
  
- IO_PRINT_INFO1("get_charge_status: charge_status %d",
-                   charge_status);
+ //IO_PRINT_INFO1("get_charge_status: charge_status %d",
+               //    charge_status);
    return  charge_status;
 }
 
@@ -238,7 +262,7 @@ static void app_adc_vbat_ntc_voltage_read(void)
 			    if(HiLowTempTime >= 3)	
 				{
 				     APP_PRINT_INFO1(" Power off HiLowTempTime ===: %d",  HiLowTempTime);
-					 app_adc_deinit();
+					 //app_adc_deinit();
 					 os_delay(100);
 				     app_mmi_handle_action(MMI_DEV_POWER_OFF);   
 					 
@@ -277,7 +301,7 @@ static void app_adc_vbat_ntc_voltage_read(void)
 				
 				if((app_db.device_state == APP_DEVICE_STATE_ON) &&(ChargeHiLowTempTime >= 3) )
 				{
-				      app_adc_deinit();
+				     // app_adc_deinit();
                       app_mmi_handle_action(MMI_DEV_POWER_OFF); 
 					  HiLowChargeFlag = 1;
 					  Pad_Config(CHG_OFF, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_UP, PAD_OUT_ENABLE, PAD_OUT_HIGH);	
@@ -296,15 +320,16 @@ static void app_adc_vbat_ntc_voltage_read(void)
 
 static void app_adc_vbat_ntc_voltage_read_callback(void *pvPara, uint32_t int_status)
 {
-    uint16_t adc_data;
-    uint16_t sched_bit_map = 0x0001;
+    uint16_t adc_data[2];
+    uint16_t sched_bit_map = 0x0003;
 	bool ret = true;
 
-    adc_mgr_read_data_req(adc_channel_vbat_ntc_voltage, &adc_data, sched_bit_map);
+    adc_mgr_read_data_req(adc_channel_vbat_ntc_voltage, adc_data, sched_bit_map);
 
-   temperature_battery = ADC_GetHighBypassRes(adc_data, EXT_SINGLE_ENDED(3));
-    IO_PRINT_INFO1("app_adc_vbat_ntc_voltage_read_callback: temperature_battery %d",
-                   temperature_battery);
+   temperature_battery = ADC_GetHighBypassRes(adc_data[0], EXT_SINGLE_ENDED(3));
+   voltage_battery = ADC_GetRes(adc_data[1], INTERNAL_VBAT_MODE);
+    IO_PRINT_INFO2("app_adc_vbat_ntc_voltage_read_callback: temperature_battery %d voltage_battery %d",
+                   temperature_battery,voltage_battery);
     
 	 T_IO_MSG adp_msg;
  
@@ -337,8 +362,10 @@ static void app_adc_vbat_ntc_voltage_init(void)
 
     ADC_StructInit(&ADC_InitStruct);
     ADC_InitStruct.adcClock = ADC_CLK_39K;
-    ADC_InitStruct.bitmap = 0x0001;
+    ADC_InitStruct.bitmap = 0x0003;	
     ADC_InitStruct.schIndex[0] = EXT_SINGLE_ENDED(3);
+	ADC_InitStruct.schIndex[1] = INTERNAL_VBAT_MODE;
+	
     if (!adc_mgr_register_req(&ADC_InitStruct,
                               (adc_callback_function_t)app_adc_vbat_ntc_voltage_read_callback,
                               &adc_channel_vbat_ntc_voltage))
@@ -358,7 +385,7 @@ static void app_adc_timeout_cb(uint8_t timer_evt, uint16_t param)
         {
             app_adc_vbat_ntc_voltage_read();
         }
-	    app_led_check_charging_mode(0);
+	   // app_led_check_charging_mode(0);
         break;
 
     default:
@@ -375,7 +402,7 @@ static void adc_charger_init(void)
 
     app_start_timer(&timer_idx_adc_read_vbat_ntc_voltage, "adc_read_vbat_ntc_voltage",
                     app_adc_timer_id, APP_TIMER_ADC_READ_VBAT_NTC_VOLTAGE, 0, true,
-                    1000);
+                    500);
 }
 
 void app_wlt_ui_init(void)
@@ -397,12 +424,12 @@ void wlt_ui_timer_start(void)
 	app_start_timer(&timer_idx_ui_switch, "ui_switch",
 						   app_ui_timer_id, 1, 0, true,
 						   200);
-    wlt_time_ui_init = true;
+     wlt_time_ui_init = true;
 }
 
 void wlt_ui_timer_stop(void)
 {
-	app_stop_timer(timer_idx_ui_switch);
+	app_stop_timer(&timer_idx_ui_switch);
 	app_adc_deinit();
 }
 

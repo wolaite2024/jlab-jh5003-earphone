@@ -807,7 +807,7 @@ static bool app_led_is_repeat_mode(T_LED_MODE mode)
     uint8_t non_repeat_mode_start_point;
     uint8_t non_repeat_mode_end_point = LED_MODE_RAM_TABLE_START;
 
-    if (app_cfg_const.enable_repeat_gaming_mode_led)
+    if (1)//(app_cfg_const.enable_repeat_gaming_mode_led)
     {
         non_repeat_mode_start_point = LED_MODE_POWER_ON;
     }
@@ -1074,6 +1074,12 @@ bool app_led_change_mode(T_LED_MODE change_mode, bool forced_sec_change, bool re
         return false;
     }
 
+   if((app_cfg_nv.allowed_source == 0) && (change_mode == LED_MODE_PAIRING))
+ 	{
+       APP_PRINT_TRACE0("dongle mode no display LED_MODE_PAIRING !!!!!!" );
+	  // return false;
+    }
+ 
     APP_PRINT_TRACE3("app_led_change_mode: 0x%02x forced_sec_change %d relay_to_sec %d",
                      change_mode, forced_sec_change, relay_to_sec);
 
@@ -1322,7 +1328,7 @@ static bool app_led_is_linkback_state(void)
     bool ret = false;
 
     if ((app_cfg_nv.bud_role != REMOTE_SESSION_ROLE_SECONDARY) &&
-        (app_bt_policy_get_state() == BP_STATE_LINKBACK))
+        ((app_bt_policy_get_state() == BP_STATE_LINKBACK)||(app_dongle_get_state() == DONGLE_STATE_LINKBACK)))
     {
         if (app_link_get_connected_src_num() && app_cfg_const.disallow_linkback_led_when_b2s_connected)
         {
@@ -1334,7 +1340,7 @@ static bool app_led_is_linkback_state(void)
         }
     }
 
-#if LED_DEBUG
+#if 1//LED_DEBUG
     APP_PRINT_TRACE3("app_led_is_linkback_state: ret %d, bt state %d, disallow_linkback_led_when_b2s_connected %d",
                      ret, app_bt_policy_get_state(), app_cfg_const.disallow_linkback_led_when_b2s_connected);
 #endif
@@ -1396,7 +1402,7 @@ static bool app_led_is_connected_state(void)
 
     if (((app_db.remote_session_state == REMOTE_SESSION_STATE_CONNECTED) &&
          app_bt_policy_get_state() != BP_STATE_STANDBY) ||
-        app_link_get_connected_src_num())
+        app_link_get_connected_src_num() || app_dongle_get_connected_dongle_link() != NULL)
     {
         ret = true;
     }
@@ -1475,7 +1481,7 @@ void app_led_check_repeat_mode(void)
 #endif
                            )
                         {
-                            change_mode = LED_MODE_MIC_MUTE;
+                            //change_mode = LED_MODE_MIC_MUTE;
                         }
                         else
                         {
@@ -1501,7 +1507,7 @@ void app_led_check_repeat_mode(void)
 #if F_APP_GAMING_DONGLE_SUPPORT && (TARGET_LE_AUDIO_GAMING == 0)
                 else if ((app_db.dongle_is_enable_mic) && (app_audio_is_mic_mute()))
                 {
-                    change_mode = LED_MODE_MIC_MUTE;
+                    //change_mode = LED_MODE_MIC_MUTE;
                 }
 #endif
 #if F_APP_USB_AUDIO_SUPPORT
@@ -1539,15 +1545,16 @@ void app_led_check_repeat_mode(void)
                                             app_cfg_const.timer_rws_couple_led * 1000);
                         }
                     }
-
-                    if (app_bt_policy_get_state() == BP_STATE_PAIRING_MODE)
+                    APP_PRINT_INFO3("  change_mode   %x dongle_stutas%x headset_stutas %x", change_mode ,app_dongle_get_state(),app_bt_policy_get_state() );
+                    if (app_bt_policy_get_state() == BP_STATE_PAIRING_MODE && (app_cfg_nv.allowed_source != 0))
                     {
                         change_mode = LED_MODE_PAIRING;
                     }
-                    else if (app_cfg_const.enable_repeat_gaming_mode_led && app_db.gaming_mode)
+                    else if ((app_cfg_nv.allowed_source == 0)&& (app_dongle_get_state() == DONGLE_STATE_PAIRING))
                     {
                         //LED_MODE_GAMING_MODE is repeat
                         change_mode = LED_MODE_GAMING_MODE;
+						
                     }
                     else if (app_led_is_audio_playing_state())
                     {
@@ -1560,6 +1567,7 @@ void app_led_check_repeat_mode(void)
                     else if (app_led_is_linkback_state())
                     {
                         change_mode = LED_MODE_LINK_BACK;
+						APP_PRINT_INFO2(" live dongle link_back    = %x stauts = %x", app_led_is_linkback_state(),app_dongle_get_state());
                     }
 #if F_APP_ANC_SUPPORT
                     else if (app_led_is_anc_state())
@@ -1832,7 +1840,7 @@ static void app_led_ipc_device_event_cback(uint32_t event, void *msg)
 {
     APP_PRINT_INFO1("app_led_ipc_event_cback: event %x", event);
 
-   // app_led_check_charging_mode(0); //LED mode has higher priority
+    app_led_check_charging_mode(0); //LED mode has higher priority
     app_led_check_repeat_mode();
 #if F_APP_TEAMS_GLOBAL_MUTE_SUPPORT
     teams_extend_led_check_mode();

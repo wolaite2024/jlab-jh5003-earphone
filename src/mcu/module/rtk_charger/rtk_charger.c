@@ -53,15 +53,72 @@ void rtk_charger_init(RTK_CHARGER_STATE_CB app_state_cb, RTK_CHARGER_SOC_CB app_
 }
 
 extern T_CHARGER_STATE get_charge_status(void);
+extern uint32_t voltage_battery;
+extern bool adc_vbat_ntc_voltage_init;
 T_CHARGER_STATE rtk_charger_get_charge_state(void)
 {
     return get_charge_status();//charger_api_get_charger_state();
 }
+struct battery_cap
+{
+		uint16_t cap;
+		uint16_t volt;
+};
 
+#define BOARD_BATTERY_CAP_MAPPINGS      \
+	{0, 3100},  \
+	{5, 3300},  \
+	{10, 3400}, \
+	{20, 3550}, \
+	{30, 3650}, \
+	{40, 3750}, \
+	{50, 3800}, \
+	{60, 3850}, \
+	{70, 3900}, \
+	{80, 3950}, \
+	{90, 4000}, \
+	{100, 4090},
+
+#define BATTERY_CAP_TABLE_CNT		12
+static const struct battery_cap battery_cap_tbl[BATTERY_CAP_TABLE_CNT] = {
+    BOARD_BATTERY_CAP_MAPPINGS
+};
+
+uint16_t voltage2capacit(uint32_t volt)
+{
+	const struct battery_cap *bc, *bc_prev;
+	uint32_t  i, cap = 0;
+
+    if(!adc_vbat_ntc_voltage_init)
+		return 50;
+	/* %0 */
+	if (volt <= battery_cap_tbl[0].volt)
+		return 0;
+
+	/* %100 */
+	if (volt >= battery_cap_tbl[BATTERY_CAP_TABLE_CNT - 1].volt)
+		return 100;
+
+	for (i = 1; i < BATTERY_CAP_TABLE_CNT; i++) {
+		bc = &battery_cap_tbl[i];
+		if (volt < bc->volt) {
+			bc_prev = &battery_cap_tbl[i - 1];
+			/* linear fitting */
+			cap = bc_prev->cap + (((bc->cap - bc_prev->cap) *
+				(volt - bc_prev->volt)*10 + 5) / (bc->volt - bc_prev->volt)) / 10;
+
+			break;
+		}
+	}
+
+	return cap;
+}
 
 uint8_t rtk_charger_get_soc(void)
 {
-    return charger_api_get_state_of_charge();
+//	APP_PRINT_TRACE1("rtk_charger_get_soc: %d", voltage2capacit(voltage_battery));
+
+    return charger_api_get_state_of_charge();// (uint8_t)voltage2capacit(voltage_battery);//
 }
 
 
@@ -69,8 +126,8 @@ uint32_t rtk_charger_get_bat_vol(void)
 {
     uint16_t bat_vol = 0;
 
-    charger_utils_get_batt_volt(&bat_vol);
-    return (uint32_t)bat_vol;
+   charger_utils_get_batt_volt(&bat_vol);
+    return (uint32_t)bat_vol;//voltage_battery;
 }
 
 

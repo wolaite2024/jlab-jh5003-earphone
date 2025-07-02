@@ -339,7 +339,7 @@ static void app_slide_switch_x_driver_init(T_APP_SLIDE_SWITCH_ID id)
     if (low_action == ACTION_POWER_ON)
     {
         //reduce power consumption
-        pull_mode = GPIO_PULL_DOWN;
+        pull_mode = GPIO_PULL_UP;
     }
     else if (high_action == ACTION_POWER_ON)
     {

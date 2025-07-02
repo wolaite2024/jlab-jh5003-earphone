@@ -50,7 +50,7 @@
 #define F_APP_USB_HID_SUPPORT                       0
 #define F_APP_USB_SUSPEND_SUPPORT                   0
 #define F_APP_LINEIN_SUPPORT                        1
-#define F_APP_ERWS_SUPPORT                          1
+#define F_APP_ERWS_SUPPORT                          0
 #define F_APP_VAD_SUPPORT                           0
 #define F_APP_CFU_SUPPORT                           0
 #define F_APP_RTK_FAST_PAIR_ADV_FEATURE_SUPPORT     0
@@ -152,7 +152,7 @@
 #if F_APP_SLIDE_SWITCH_SUPPORT
 #define F_APP_SLIDE_SWITCH_POWER_ON_OFF             1
 #define F_APP_SLIDE_SWITCH_LISTENING_MODE           0
-#define F_APP_SLIDE_SWITCH_MIC_MUTE_TOGGLE          0
+#define F_APP_SLIDE_SWITCH_MIC_MUTE_TOGGLE          1
 #endif
 
 //----- [chargerbox cmd related] -----

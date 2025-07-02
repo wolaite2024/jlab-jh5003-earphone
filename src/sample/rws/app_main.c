@@ -746,7 +746,7 @@ static void driver_init(void)
         app_gpio_on_off_driver_init(app_cfg_const.gpio_box_detect_pinmux);
     }
 #endif
-
+     //app_cfg_const.discharger_support = 1;
     if (app_cfg_const.charger_support || app_cfg_const.discharger_support)
     {
         app_charger_init();
@@ -1344,6 +1344,9 @@ int main(void)
 
     app_mmi_init();
 
+	extern void app_wlt_ui_init(void);
+	app_wlt_ui_init();
+
     if (is_single_tone_test_mode()) //DUT test mode
     {
         app_audio_init();
@@ -1480,8 +1483,7 @@ int main(void)
 #if F_APP_LINEIN_SUPPORT
         app_line_in_init();
 #endif
-      extern void app_wlt_ui_init(void);
-		app_wlt_ui_init();
+      
 
 #if F_APP_AIRPLANE_SUPPORT
         app_airplane_init();

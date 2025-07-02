@@ -176,6 +176,35 @@ static void app_bond_adjust_dongle_priority(void)
 }
 #endif
 
+static void app_del_old_dongle_addr(void)
+{
+    uint8_t bond_num = app_bond_b2s_num_get();
+	T_APP_BR_LINK *dongle_link = app_dongle_get_connected_dongle_link();
+    uint8_t i = 0;
+    uint8_t addr[6] = {0};
+    uint32_t bond_flag = 0;
+
+    for (i = 0; i < bond_num; i++)
+    {
+        if (app_bond_b2s_addr_get(i + 1, addr) == false || (dongle_link == NULL))
+        {
+            continue;
+        }
+
+        if (bt_bond_flag_get(addr, &bond_flag) &&
+            (bond_flag & BOND_FLAG_DONGLE))
+        {       
+          if(!memcmp(app_db.br_link[dongle_link->id].bd_addr, addr, 6))
+             {
+                bt_bond_delete(addr);
+             //bt_bond_priority_set(addr);
+          	 }
+           
+           // return;
+        }
+    }
+}
+
 bool app_bond_key_set(uint8_t *bd_addr, uint8_t *linkkey, uint8_t key_type)
 {
     bool ret = false;

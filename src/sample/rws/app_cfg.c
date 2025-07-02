@@ -165,7 +165,7 @@ uint32_t app_cfg_reset(void)
     app_cfg_nv.one_wire_aging_test_done = temp_one_wire_aging_test_done;
     app_cfg_nv.one_wire_start_force_engage = temp_one_wire_start_force_engage;
     app_cfg_nv.xtal_k_times = temp_xtal_k_times;
-
+    app_cfg_nv.sidetoneflag = 0;
 #if F_APP_CSIS_SUPPORT
     app_lea_csis_gen_sirk();
 #endif

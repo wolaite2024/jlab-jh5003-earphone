@@ -287,6 +287,8 @@ static void app_line_in_timeout_cb(uint8_t timer_evt, uint16_t param)
                 {
                     app_line_in_plug();
                     app_line_in_handler(true, false);
+					app_bt_policy_shutdown();
+					app_audio_tone_type_play(TONE_IN_EAR_DETECTION, false, false);
 
 #if F_APP_GAMING_WIRED_MODE_HANDLE
                     app_dongle_wired_mode_handle(EVENT_LINEIN_PLUG_IN);
@@ -300,6 +302,7 @@ static void app_line_in_timeout_cb(uint8_t timer_evt, uint16_t param)
                 {
                     app_line_in_handler(false, false);
                     app_line_in_unplug();
+				    app_mmi_handle_action(MMI_DEV_POWER_OFF);
 
 #if F_APP_GAMING_WIRED_MODE_HANDLE
                     app_dongle_wired_mode_handle(EVENT_LINEIN_PLUG_OUT);

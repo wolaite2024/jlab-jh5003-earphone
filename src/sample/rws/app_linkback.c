@@ -970,6 +970,34 @@ bool linkback_active_node_judge_cur_conn_prof(uint8_t *bd_addr, uint32_t prof)
     return ret;
 }
 
+bool get_dongle_connect_record_flag(void)
+{
+
+   uint8_t bd_addr[6];
+   uint8_t bond_num;
+   uint32_t bond_flag;
+   bool dongle_flag = false;
+   bond_num = app_bond_b2s_num_get();
+
+   for (uint8_t i = 1; i <= bond_num; i++)
+        {
+            bond_flag = 0;
+            if (app_bond_b2s_addr_get(i, bd_addr))
+            {
+                bt_bond_flag_get(bd_addr, &bond_flag);
+                if ((bond_flag & BOND_FLAG_DONGLE))
+                {
+                   dongle_flag = true;
+                }
+				else
+				{
+                    dongle_flag = false;
+				}
+            }
+        }
+   
+   return dongle_flag;
+}
 void linkback_load_bond_list(uint8_t skip_node_num, uint16_t retry_timeout)
 {
     uint8_t i;
@@ -1123,8 +1151,8 @@ void linkback_load_bond_list(uint8_t skip_node_num, uint16_t retry_timeout)
 #endif
     }
 
-    ENGAGE_PRINT_TRACE5("linkback_load_bond_list: bond_num %d, num %d, skip_num %d, max_load_num %d, linkback_to_dongle_first %d",
-                        bond_num, num, skip_node_num, max_load_num, app_cfg_const.linkback_to_dongle_first);
+    ENGAGE_PRINT_TRACE6("linkback_load_bond_list: bond_num %d, num %d, skip_num %d, max_load_num %d, linkback_to_dongle_first %d retry_timeout %d",
+                        bond_num, num, skip_node_num, max_load_num, app_cfg_const.linkback_to_dongle_first,retry_timeout);
 }
 
 bool linkback_check_bond_flag(uint8_t *bd_addr, uint32_t prof)
