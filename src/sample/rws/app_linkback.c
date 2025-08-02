@@ -415,6 +415,8 @@ void linkback_profile_disconnect_start(uint8_t *bd_addr, uint32_t profs)
     {
         gap_br_send_acl_disconn_req(bd_addr);
     }
+
+
 }
 
 void linkback_todo_queue_init(void)

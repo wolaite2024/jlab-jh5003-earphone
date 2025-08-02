@@ -53,7 +53,7 @@ static T_STRING dev_strings[] =
     [1] =
     {
         .id     = STRING_ID_PRODUCT,
-        .s = "USB Audio Device",
+        .s = "JLab Daybreak Wireless USB",
     },
 
     [2] =

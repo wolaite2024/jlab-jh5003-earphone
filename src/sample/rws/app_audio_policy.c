@@ -216,6 +216,7 @@ typedef struct
 
 typedef enum t_logical_mic_id
 {
+    LOGICAL_MIC_NORM = 0x00,
     LOGICAL_MIC1 = 0x01,
     LOGICAL_MIC2 = 0x02,
     LOGICAL_MIC3 = 0x03,
@@ -1644,7 +1645,7 @@ static void app_audio_policy_cback(T_AUDIO_EVENT event_type, void *event_buf, ui
 #endif
                         }
 
-                        if (mic_switch_mode != 0)
+                        if (mic_switch_mode != LOGICAL_MIC_NORM)
                         {
                             app_audio_route_entry_update(AUDIO_CATEGORY_VOICE,
                                                          AUDIO_DEVICE_OUT_SPK | AUDIO_DEVICE_IN_MIC,
@@ -1899,8 +1900,8 @@ static void app_audio_policy_cback(T_AUDIO_EVENT event_type, void *event_buf, ui
                     }
                 }
             }
-
-            app_audio_handle_vol_change(vol_status);
+           
+                app_audio_handle_vol_change(vol_status);
         }
         break;
 
@@ -6161,7 +6162,7 @@ void app_audio_set_mic_mute_status(uint8_t status)
 #endif
 }
 
-static void app_audio_effects_off(void)
+static void app_audio_effect_control(uint8_t is_effect_off)
 {
     uint8_t active_idx;
     T_APP_BR_LINK *p_link = NULL;
@@ -6170,7 +6171,7 @@ static void app_audio_effects_off(void)
 
     if (p_link != NULL)
     {
-        audio_track_effect_control(p_link->sco_track_handle, 1);
+        audio_track_effect_control(p_link->sco_track_handle, is_effect_off);
     }
 }
 
@@ -6221,10 +6222,10 @@ static void app_audio_mic_test(uint8_t mic_id)
         mic_entry1[0].endpoint_attr.mic.id = mic_entry[0].endpoint_attr.mic.id;
         mic_entry1[0].endpoint_attr.mic.type = mic_entry[0].endpoint_attr.mic.type;
         mic_entry1[0].io_type = mic_entry[0].io_type;
-        mic_entry1[1].endpoint_attr.mic.id = mic_entry[1].endpoint_attr.mic.id;
+        mic_entry1[1].endpoint_attr.mic.id = AUDIO_ROUTE_EXT_MIC;//mic_entry[1].endpoint_attr.mic.id;
         mic_entry1[1].endpoint_attr.mic.type = mic_entry[1].endpoint_attr.mic.type;
         mic_entry1[1].io_type = mic_entry[1].io_type;
-        mic_entry1[2].endpoint_attr.mic.id = mic_entry[2].endpoint_attr.mic.id;
+        mic_entry1[2].endpoint_attr.mic.id = AUDIO_ROUTE_EXT_MIC;//mic_entry[2].endpoint_attr.mic.id;
         mic_entry1[2].endpoint_attr.mic.type = mic_entry[2].endpoint_attr.mic.type;
         mic_entry1[2].io_type = mic_entry[2].io_type;
     }
@@ -6233,10 +6234,10 @@ static void app_audio_mic_test(uint8_t mic_id)
         mic_entry1[0].endpoint_attr.mic.id = mic_entry[1].endpoint_attr.mic.id;
         mic_entry1[0].endpoint_attr.mic.type = mic_entry[1].endpoint_attr.mic.type;
         mic_entry1[0].io_type = mic_entry[0].io_type;
-        mic_entry1[1].endpoint_attr.mic.id = mic_entry[0].endpoint_attr.mic.id;
+        mic_entry1[1].endpoint_attr.mic.id = AUDIO_ROUTE_EXT_MIC;//mic_entry[0].endpoint_attr.mic.id;
         mic_entry1[1].endpoint_attr.mic.type = mic_entry[0].endpoint_attr.mic.type;
         mic_entry1[1].io_type = mic_entry[1].io_type;
-        mic_entry1[2].endpoint_attr.mic.id = mic_entry[2].endpoint_attr.mic.id;
+        mic_entry1[2].endpoint_attr.mic.id = AUDIO_ROUTE_EXT_MIC;//mic_entry[2].endpoint_attr.mic.id;
         mic_entry1[2].endpoint_attr.mic.type = mic_entry[2].endpoint_attr.mic.type;
         mic_entry1[2].io_type = mic_entry[2].io_type;
     }
@@ -6245,10 +6246,10 @@ static void app_audio_mic_test(uint8_t mic_id)
         mic_entry1[0].endpoint_attr.mic.id = mic_entry[2].endpoint_attr.mic.id;
         mic_entry1[0].endpoint_attr.mic.type = mic_entry[2].endpoint_attr.mic.type;
         mic_entry1[0].io_type = mic_entry[0].io_type;
-        mic_entry1[1].endpoint_attr.mic.id = mic_entry[1].endpoint_attr.mic.id;
+        mic_entry1[1].endpoint_attr.mic.id = AUDIO_ROUTE_EXT_MIC;//mic_entry[1].endpoint_attr.mic.id;
         mic_entry1[1].endpoint_attr.mic.type = mic_entry[1].endpoint_attr.mic.type;
         mic_entry1[1].io_type = mic_entry[1].io_type;
-        mic_entry1[2].endpoint_attr.mic.id = mic_entry[0].endpoint_attr.mic.id;
+        mic_entry1[2].endpoint_attr.mic.id = AUDIO_ROUTE_EXT_MIC;//mic_entry[0].endpoint_attr.mic.id;
         mic_entry1[2].endpoint_attr.mic.type = mic_entry[0].endpoint_attr.mic.type;
         mic_entry1[2].io_type = mic_entry[2].io_type;
     }
@@ -6262,30 +6263,36 @@ static void app_audio_mic_test(uint8_t mic_id)
 
 uint8_t app_audio_mic_switch(uint8_t param)
 {
-    if (param)
-    {
-        mic_switch_mode = param;
-    }
-    else
-    {
-        mic_switch_mode++;
-    }
-
-    switch (mic_switch_mode)
+    switch (param)
     {
     case 1:
     case 2:
+	   {
+        mic_switch_mode = param;
+    }
+		break;
     case 3:
+    {
+            app_audio_effect_control(0); // effect on
+            mic_switch_mode = LOGICAL_MIC_NORM; // normal mode (mic1/mic2/mic3, effect on)
+            return mic_switch_mode;
+    }
+
+	case 4:
         {
-            app_audio_mic_test(mic_switch_mode);
+            mic_switch_mode = LOGICAL_MIC3; // mic3 test + effect off
         }
         break;
 
     default:
+        {
+            mic_switch_mode++;
+        }
         break;
     }
 
-    app_audio_effects_off();
+    app_audio_mic_test(mic_switch_mode); // mic test
+    app_audio_effect_control(1); // effect off
 
     return mic_switch_mode;
 }
@@ -6597,6 +6604,7 @@ bool app_audio_tone_type_play(T_APP_AUDIO_TONE_TYPE tone_type, bool flush, bool 
     bool ret = false;
     uint8_t tone_index = TONE_INVALID_INDEX;
     int8_t check_result = 0;
+	static bool first_power_on = false;
 
 #if F_APP_SAIYAN_MODE
     if ((data_capture_saiyan.saiyan_enable) && (tone_type != TONE_POWER_ON))
@@ -6606,6 +6614,17 @@ bool app_audio_tone_type_play(T_APP_AUDIO_TONE_TYPE tone_type, bool flush, bool 
     }
 #endif
 
+  if ((app_cfg_nv.allowed_source != ALLOWED_SOURCE_BT) && (tone_type == TONE_VOL_MAX ||tone_type == TONE_VOL_MIN ))
+  	{
+        APP_PRINT_TRACE1("ALLOWED_SOURCE_BT: disallow 0x%x", tone_type);
+        return true;
+    }
+  if(!first_power_on &&((tone_type == TONE_MIC_MUTE_ON )||(tone_type == TONE_MIC_MUTE_OFF )))
+  	{
+  	    first_power_on = true;
+        APP_PRINT_TRACE1("first power on    disallow mute or mute off tone 0x%x", tone_type);
+        return true;
+    }
 #if F_APP_DONGLE_MULTI_PAIRING
     if (app_cfg_const.enable_dongle_multi_pairing)
     {

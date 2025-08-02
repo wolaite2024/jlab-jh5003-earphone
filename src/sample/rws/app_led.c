@@ -865,6 +865,17 @@ static void app_led_set_mode(T_LED_MODE mode)
         }
     }
 
+    if (mode == LED_MODE_LOW_BATTERY)  //Live add 20250724
+	 { 
+	 	if (pre_mode == LED_MODE_PAIRING 
+			||pre_mode == LED_MODE_LINK_BACK
+			|| pre_mode ==  LED_MODE_INCOMING_CALL
+			|| pre_mode == LED_MODE_OUTGOING_CALL
+			|| pre_mode == LED_MODE_GAMING_MODE)
+	        {
+			return;
+		  }
+	}
     if (app_cfg_const.led_support &&
         (led_stop_check == 0
 #if (F_APP_ANC_SUPPORT || F_APP_APT_SUPPORT)
@@ -1341,8 +1352,8 @@ static bool app_led_is_linkback_state(void)
     }
 
 #if 1//LED_DEBUG
-    APP_PRINT_TRACE3("app_led_is_linkback_state: ret %d, bt state %d, disallow_linkback_led_when_b2s_connected %d",
-                     ret, app_bt_policy_get_state(), app_cfg_const.disallow_linkback_led_when_b2s_connected);
+    APP_PRINT_TRACE5("app_led_is_linkback_state: ret %d, bt state %d, disallow_linkback_led_when_b2s_connected %d dongle state = %d allowed_source = %d",
+                     ret, app_bt_policy_get_state(), app_cfg_const.disallow_linkback_led_when_b2s_connected,app_dongle_get_state(), app_cfg_nv.allowed_source);
 #endif
 
     return ret;
@@ -1441,6 +1452,8 @@ static T_LED_MODE app_led_get_connected_mode(void)
     return change_mode;
 }
 
+extern uint8_t get_swtich_position(void);
+extern uint8_t get_dongle_enter_flag(void);
 void app_led_check_repeat_mode(void)
 {
     T_LED_MODE change_mode;
@@ -1550,7 +1563,7 @@ void app_led_check_repeat_mode(void)
                     {
                         change_mode = LED_MODE_PAIRING;
                     }
-                    else if ((app_cfg_nv.allowed_source == 0)&& (app_dongle_get_state() == DONGLE_STATE_PAIRING))
+                    else if ((app_cfg_nv.allowed_source == 0)&& (app_dongle_get_state() == DONGLE_STATE_PAIRING) && get_dongle_enter_flag())
                     {
                         //LED_MODE_GAMING_MODE is repeat
                         change_mode = LED_MODE_GAMING_MODE;
@@ -1593,7 +1606,16 @@ void app_led_check_repeat_mode(void)
                     }
                     else
                     {
-                        change_mode = LED_MODE_STANDBY;
+                      if(get_swtich_position())
+                       {
+                         change_mode = LED_MODE_STANDBY;
+                       }
+					   else
+					   	{
+                            change_mode = LED_MODE_LINK_BACK;
+						   APP_PRINT_INFO2(" live1 dongle link_back    = %x stauts = %x", app_led_is_linkback_state(),app_dongle_get_state());
+					    }
+					   	
                     }
                 }
 

@@ -308,7 +308,7 @@ RAM_TEXT_SECTION void QDEC_Handler(void)
                 qdec_ctx.pre_ct = qdec_ctx.cur_ct;
             }
         }
-        else if ((qdec_ctx.cur_ct - qdec_ctx.pre_ct >= 1) || (qdec_ctx.cur_ct - qdec_ctx.pre_ct <= -1))
+        else if ((qdec_ctx.cur_ct - qdec_ctx.pre_ct >= 2) || (qdec_ctx.cur_ct - qdec_ctx.pre_ct <= -2))
         {
             app_io_msg_send(&qdec_msg);
             qdec_ctx.pre_ct = qdec_ctx.cur_ct;

@@ -231,6 +231,7 @@ T_EVENT cur_event;
 T_BT_DEVICE_MODE radio_mode = BT_DEVICE_MODE_IDLE;
 
 extern T_BP_TPOLL_CONTEXT tpoll_ctx;
+extern uint8_t get_swtich_position(void);
 
 typedef enum
 {
@@ -1065,7 +1066,7 @@ static void app_bt_policy_b2s_connected_mark_index(uint8_t *bd_addr)
     }
 }
 
-static bool app_bt_policy_b2s_connected_is_first_src(uint8_t *bd_addr)
+ bool app_bt_policy_b2s_connected_is_first_src(uint8_t *bd_addr)
 {
     T_APP_BR_LINK *p_link;
     bool ret = true;
@@ -1879,7 +1880,7 @@ static void app_bt_policy_linkback_sched(void)
         }
     }
 
-    if (app_cfg_const.enable_power_on_linkback)
+    if (app_cfg_const.enable_power_on_linkback &&  get_swtich_position())
     {
         if (!startup_linkback_done_flag)
         {
@@ -4784,6 +4785,7 @@ static bool app_bt_policy_check_enter_standby(void)
 #endif
 
 
+
 static void app_bt_policy_stable_sched(T_STABLE_ENTER_MODE mode)
 {
     app_bt_policy_stable_enter_mode(mode);
@@ -4852,7 +4854,7 @@ static void app_bt_policy_stable_sched(T_STABLE_ENTER_MODE mode)
 #endif
 
                     if ((!force_standby) &&
-                        (!linkback_flag || app_cfg_const.enable_power_on_linkback_fail_enter_pairing) &&
+                        (!linkback_flag || (app_cfg_const.enable_power_on_linkback_fail_enter_pairing && (get_swtich_position() == 2))) &&
                         (app_hfp_get_call_status() == APP_CALL_IDLE))
                     {
 #if F_APP_LEGACY_DONGLE_BINDING || F_APP_LEA_DONGLE_BINDING
@@ -5011,8 +5013,7 @@ static void app_bt_policy_stable_sched(T_STABLE_ENTER_MODE mode)
                 {
                     app_bt_policy_enter_state(STATE_AFE_STANDBY, BT_DEVICE_MODE_CONNECTABLE);
                 }
-            }
-            break;
+            }            break;
 
         case STABLE_ENTER_MODE_NOT_PAIRING:
             {
@@ -5025,6 +5026,10 @@ static void app_bt_policy_stable_sched(T_STABLE_ENTER_MODE mode)
 
                 app_audio_hearing_state_get(&state);
 #endif
+                APP_PRINT_TRACE2("live    app_usb_connected() = %d %d,",app_usb_connected(),app_line_in_plug_state_get());
+			    APP_PRINT_TRACE2("live	  is_pairing_timeout = %d %d,",is_pairing_timeout,app_link_get_le_link_num());
+				APP_PRINT_TRACE2("live	  app_bt_policy_b2s_connected_is_empty() = %d %d,",app_bt_policy_b2s_connected_is_empty(),state);
+
                 if ((is_pairing_timeout && app_cfg_const.enable_pairing_timeout_to_power_off) &&
 #if F_APP_ANC_SUPPORT
                     (feature_map.user_mode == ENABLE) && !app_anc_ramp_tool_is_busy() &&
@@ -5042,7 +5047,7 @@ static void app_bt_policy_stable_sched(T_STABLE_ENTER_MODE mode)
 #if F_APP_LINEIN_SUPPORT
                     && !app_line_in_plug_state_get()
 #endif
-#if F_APP_USB_AUDIO_SUPPORT
+#if 0//F_APP_USB_AUDIO_SUPPORT
                     && (!app_usb_connected())
 #endif
 #if F_APP_HEARABLE_SUPPORT
@@ -6348,7 +6353,8 @@ void app_bt_policy_state_machine(T_EVENT event, T_BT_PARAM *param)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+extern uint8_t get_dongle_enter_flag(void);
+extern void set_dongle_enter_flag(uint8_t flag);
 static void app_bt_policy_timer_cback(uint8_t timer_evt, uint16_t param)
 {
     T_BT_PARAM bt_param;
@@ -6384,6 +6390,11 @@ static void app_bt_policy_timer_cback(uint8_t timer_evt, uint16_t param)
 #endif
             app_stop_timer(&timer_idx_pairing_mode);
             app_bt_policy_state_machine(EVENT_PAIRING_MODE_TIMEOUT, NULL);
+			 if(get_dongle_enter_flag())
+			 {
+			     APP_PRINT_INFO1("APP_TIMER_DONGLE_PAIRING_MODE:timeout %d", get_dongle_enter_flag());
+				 set_dongle_enter_flag(0);
+			 }
         }
         break;
     case APP_TIMER_DONGLE_PAIRING_MODE:
@@ -6392,7 +6403,7 @@ static void app_bt_policy_timer_cback(uint8_t timer_evt, uint16_t param)
 		//  uint32_t handle_prof = A2DP_PROFILE_MASK | AVRCP_PROFILE_MASK;
 		  APP_PRINT_INFO1("APP_TIMER_DONGLE_PAIRING_MODE:state %d", app_dongle_get_state()); 
 		   app_stop_timer(&timer_idx_dongle_pairing_mode);
-	       app_bt_policy_enter_state(STATE_AFE_LINKBACK, BT_DEVICE_MODE_CONNECTABLE);
+	       app_bt_policy_enter_state(STATE_AFE_STANDBY, BT_DEVICE_MODE_CONNECTABLE);
 		   app_start_timer(&timer_idx_pairing_mode, "dongle_linkback",
                                     bt_policy_timer_id, APP_TIMER_PAIRING_MODE, 0, false,
                                     app_cfg_const.timer_pairing_timeout * 1000);
@@ -6775,6 +6786,7 @@ static void app_bt_policy_gaming_handle_did_info(T_APP_BR_LINK *p_link, T_BT_EVE
 }
 #endif
 
+
 static void app_bt_policy_cback(T_BT_EVENT event_type, void *event_buf, uint16_t buf_len)
 {
     T_BT_EVENT_PARAM *param = event_buf;
@@ -6884,6 +6896,15 @@ static void app_bt_policy_cback(T_BT_EVENT event_type, void *event_buf, uint16_t
                 }
                 else
                 {
+	                #if F_APP_GAMING_DONGLE_SUPPORT
+	                    if (!app_dongle_is_streaming())
+	                    {
+	                        if (STATE_AFE_LINKBACK == cur_state)
+	                        {
+	                            app_bt_policy_enter_state(STATE_AFE_LINKBACK, BT_DEVICE_MODE_CONNECTABLE);
+	                        }
+	                    }
+	                 #endif
                     app_bt_policy_state_machine(EVENT_SRC_CONN_FAIL, &bt_param);
                 }
             }
@@ -7044,6 +7065,7 @@ static void app_bt_policy_cback(T_BT_EVENT event_type, void *event_buf, uint16_t
 
                 app_bt_policy_b2s_tpoll_update(bt_param.bd_addr, BP_TPOLL_EVENT_ACL_DISCONN);
             }
+			
         }
         break;
 

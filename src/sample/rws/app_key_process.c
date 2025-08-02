@@ -2662,7 +2662,8 @@ static void app_key_check_press(T_KEY_CHECK key_check)
                     state_of_charge = app_charger_get_soc();
 					APP_PRINT_TRACE3("app_key_check_press:  %d, cap %d gpio_status  %d ",
                                  app_charger_state, state_of_charge,gpio_status);
-                    if (((app_charger_state == APP_CHARGER_STATE_NO_CHARGE) && (state_of_charge == BAT_CAPACITY_0)) || !gpio_status)
+                    //if (((app_charger_state == APP_CHARGER_STATE_NO_CHARGE) && (state_of_charge == BAT_CAPACITY_0)) || !gpio_status)
+                    if (!gpio_status)
                     {
                         return;
                     }

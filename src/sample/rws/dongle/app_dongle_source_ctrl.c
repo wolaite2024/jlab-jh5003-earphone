@@ -20,7 +20,7 @@
 #include "app_lea_ascs.h"
 #include "transmit_svc_dongle.h"
 #endif
-
+#include "app_bond.h"
 static void source_switch_to_dongle_profile_handle(uint8_t b2s_num, T_APP_BR_LINK *p_dongle_link,
                                                    T_APP_BR_LINK *p_phone_link);
 static void source_switch_to_bt_profile_handle(uint8_t b2s_num, T_APP_BR_LINK *p_dongle_link,
@@ -69,10 +69,34 @@ static void source_switch_to_dongle_profile_handle(uint8_t b2s_num, T_APP_BR_LIN
     }
 }
 
+void linkback_phone(void)
+{
+    uint32_t bond_flag;
+    uint32_t plan_profs;
+
+   uint8_t bond_num = app_bond_b2s_num_get();
+        
+    for (uint8_t i = 1; i <= bond_num; i++)
+      {
+        if (app_bond_b2s_addr_get(i, app_db.bt_addr_disconnect))
+         {
+             bt_bond_flag_get(app_db.bt_addr_disconnect, &bond_flag);
+                if ((bond_flag & (BOND_FLAG_HFP | BOND_FLAG_HSP | BOND_FLAG_A2DP)) && !(bond_flag & (BOND_FLAG_DONGLE)))
+                {
+                    APP_PRINT_TRACE1("linkback_phone(): %d", app_bt_policy_get_state());
+                    plan_profs = app_bt_policy_get_profs_by_bond_flag(bond_flag);
+                    app_bt_policy_default_connect(app_db.bt_addr_disconnect,  plan_profs, false);
+                    break;
+                 }
+          }
+       }
+}
+  
+uint8_t Dongle_disconect_flag = 0;
 static void source_switch_to_bt_br_profile_handle(uint8_t b2s_num, T_APP_BR_LINK *p_dongle_link,
                                                   T_APP_BR_LINK *p_phone_link)
 {
-    uint32_t handle_prof = A2DP_PROFILE_MASK | AVRCP_PROFILE_MASK;
+    uint32_t handle_prof = A2DP_PROFILE_MASK | AVRCP_PROFILE_MASK|SPP_PROFILE_MASK;
 
     if (b2s_num > 1)
     {
@@ -122,6 +146,20 @@ static void source_switch_to_bt_br_profile_handle(uint8_t b2s_num, T_APP_BR_LINK
     {
         //do nothing.
     }
+	// Dongle_disconect_flag = 1;
+	   bool is_link_dongle_profile1 = (app_dongle_get_connected_dongle_link() != NULL);
+
+	  if (p_phone_link == NULL)
+	     {
+	       if(is_link_dongle_profile1)
+		   {	 
+		     os_delay(200);
+	         APP_PRINT_TRACE1("app_bt_policy_get_state: %d", is_link_dongle_profile1);
+	      }
+	   //  if (app_bt_policy_get_state() == BP_STATE_STANDBY)
+	        // linkback_load_bond_list(0, 10);
+	        linkback_phone();
+	  	} 
 }
 
 #if F_APP_GAMING_CHAT_MIXING_SUPPORT
@@ -495,7 +533,7 @@ void app_dongle_source_ctrl_evt_handler(T_SOURCE_CTRL_EVENT event)
             bool need_restore_dongle_a2dp = false;
             uint32_t handle_prof = A2DP_PROFILE_MASK | AVRCP_PROFILE_MASK;
 
-            if (p_br_dongle_link)
+            if (p_br_dongle_link || p_br_phone_link)
             {
                 if (!(p_br_dongle_link->connected_profile & handle_prof))
                 {

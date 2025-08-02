@@ -89,8 +89,9 @@ uint16_t voltage2capacit(uint32_t volt)
 	const struct battery_cap *bc, *bc_prev;
 	uint32_t  i, cap = 0;
 
-    if(!adc_vbat_ntc_voltage_init)
-		return 50;
+	extern bool get_battery_adc_ready(void);
+    if(!get_battery_adc_ready())
+		return 256;
 	/* %0 */
 	if (volt <= battery_cap_tbl[0].volt)
 		return 0;
@@ -118,7 +119,7 @@ uint8_t rtk_charger_get_soc(void)
 {
 //	APP_PRINT_TRACE1("rtk_charger_get_soc: %d", voltage2capacit(voltage_battery));
 
-    return charger_api_get_state_of_charge();// (uint8_t)voltage2capacit(voltage_battery);//
+    return (uint8_t)voltage2capacit(voltage_battery);//charger_api_get_state_of_charge();
 }
 
 

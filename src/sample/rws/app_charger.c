@@ -220,7 +220,7 @@ static T_APP_SMOOTH_BAT_VOL app_charger_smooth_bat_discharge(uint8_t origin_vol,
         {
             min_discharge_bat_vol = *new_vol;
             last_report_discharge_bat_vol = *new_vol;
-			APP_PRINT_TRACE3("min_discharge_bat_vol %d %d %d", min_discharge_bat_vol,last_report_discharge_bat_vol,timer_idx_smooth_bat_report);
+		   APP_PRINT_TRACE2("min_discharge_bat_vol %d %d", min_discharge_bat_vol,last_report_discharge_bat_vol);
         }
         else
         {
@@ -233,7 +233,7 @@ static T_APP_SMOOTH_BAT_VOL app_charger_smooth_bat_discharge(uint8_t origin_vol,
 
                 if (timer_idx_smooth_bat_report == 0)
                 {
-                   APP_PRINT_TRACE2("min_discharge_bat_vol %d %d", min_discharge_bat_vol,last_report_discharge_bat_vol);
+                APP_PRINT_TRACE3("min_discharge_bat_vol1 %d %d %d", min_discharge_bat_vol,last_report_discharge_bat_vol,timer_idx_smooth_bat_report);
                     /* start a timer to smooth bat consumption report */
                     app_start_timer(&timer_idx_smooth_bat_report, "smooth_bat_report",
                                     charger_timer_id, APP_TIMER_SMOOTH_BAT_REPORT, 0, true,
@@ -301,6 +301,37 @@ static void app_charger_state_cb(T_CHARGER_STATE rtk_charger_state)
     adp_msg.u.param = APP_CHG_MSG_CHARGER_STATE_CHANGE + (app_charger_state << 8);
 
     app_io_msg_send(&adp_msg);
+}
+
+ void app_charger_battery(uint8_t vol)
+ {
+	 T_IO_MSG adp_msg;
+	 adp_msg.type = IO_MSG_TYPE_GPIO;
+	 adp_msg.subtype = IO_MSG_GPIO_CHARGER;
+	 adp_msg.u.param = APP_CHG_MSG_STATE_OF_CHARGE_CHANGE + (vol << 8);
+	 app_io_msg_send(&adp_msg);
+ }
+  extern uint32_t voltage_battery;
+ void app_charger_state_wlt(T_CHARGER_STATE rtk_charger_state)
+{
+    T_IO_MSG adp_msg;
+    T_APP_CHARGER_STATE app_charger_state = APP_CHARGER_STATE_ERROR;
+	static T_APP_CHARGER_STATE app_charger_state_pre = APP_CHARGER_STATE_ERROR;
+
+    app_charger_state = app_charger_state_convert(rtk_charger_state);
+
+    adp_msg.type = IO_MSG_TYPE_GPIO;
+    adp_msg.subtype = IO_MSG_GPIO_CHARGER;
+    adp_msg.u.param = APP_CHG_MSG_CHARGER_STATE_CHANGE + (app_charger_state << 8);
+  if(app_charger_state_pre  != app_charger_state)
+   {
+     min_discharge_bat_vol = 0;
+     last_report_discharge_bat_vol = 0;
+     app_charger_state_pre = app_charger_state;
+     app_io_msg_send(&adp_msg);
+   }
+   extern uint16_t voltage2capacit(uint32_t volt);
+   app_charger_battery(voltage2capacit(voltage_battery));
 }
 
 static void app_charger_soc_cb(uint8_t soc)
@@ -523,9 +554,9 @@ static void app_charger_handle_soc(uint8_t state_of_charge, uint8_t first_power_
         uint8_t bat_level;
         uint8_t ori_state_of_charge = 0;
 
-        APP_PRINT_TRACE5("app_charger_handle_soc: charger_state %d, battery_status %d, charger level %d, local_batt_level %d, first_power_on %d",
+        APP_PRINT_TRACE6("app_charger_handle_soc: charger_state %d, battery_status %d, charger level %d, local_batt_level %d, first_power_on %d invalid_batt_rec %d",
                          app_charger_state, battery_status,
-                         state_of_charge, app_db.local_batt_level, first_power_on);
+                         state_of_charge, app_db.local_batt_level, first_power_on,invalid_batt_rec);
 
         if (first_power_on == 0)
         {
@@ -565,7 +596,7 @@ static void app_charger_handle_soc(uint8_t state_of_charge, uint8_t first_power_
                         /* sync batt every 10% when b2b in sniff mode */
                         need_to_sync_batt = false;
                     }
-
+                     APP_PRINT_TRACE1("live need_to_sync_batt = %d", need_to_sync_batt);
                     if (need_to_sync_batt)
                     {
                         last_sent_local_batt = state_of_charge;
@@ -705,7 +736,7 @@ static void app_charger_handle_soc(uint8_t state_of_charge, uint8_t first_power_
 #else
                             app_audio_tone_type_play((T_APP_AUDIO_TONE_TYPE)(TONE_BATTERY_PERCENTAGE_10 + bat_level - 1), false,
                                                      false);
-                            app_charger_enable_low_bat_warning();
+                         //   app_charger_enable_low_bat_warning();
 #endif
                         }
                     }
@@ -1049,7 +1080,7 @@ static void app_charger_parse_cback(uint8_t msg_type, uint8_t *buf, uint16_t len
 void app_charger_init(void)
 {
 #if RTK_CHARGER_ENABLE
-    rtk_charger_init(app_charger_state_cb, app_charger_soc_cb);
+    //rtk_charger_init(app_charger_state_cb, app_charger_soc_cb);
 #endif
      APP_PRINT_TRACE0("app_charger_init live   ");
     app_timer_reg_cb(app_charger_timeout_cb, &charger_timer_id);

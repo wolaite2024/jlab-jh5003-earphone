@@ -1775,6 +1775,7 @@ void app_mmi_hf_cancel_voice_dial(void)
 #else
     bt_hfp_voice_recognition_disable_req(app_db.br_link[active_hf_idx].bd_addr);
 #endif
+	app_audio_tone_type_play(TONE_HF_CALL_VOICE_DIAL, false, true);
 }
 
 void app_mmi_hf_end_outgoing_call(void)
@@ -1812,6 +1813,16 @@ void app_mmi_hf_end_active_call(void)
 }
 extern void wlt_ui_timer_start(void);
 extern void switch_3_mmi(void);
+
+uint8_t dongle_pairing_flag = 0;
+void set_dongle_enter_flag(uint8_t flag)
+{
+   dongle_pairing_flag = flag;
+}
+uint8_t get_dongle_enter_flag(void)
+{
+  return dongle_pairing_flag;
+}
 
 void app_mmi_handle_action(uint8_t action)
 {
@@ -3064,6 +3075,7 @@ void app_mmi_handle_action(uint8_t action)
         {
             uint8_t eq_num = eq_utils_num_get(SPK_SW_EQ, app_db.spk_eq_mode);
 
+           APP_PRINT_TRACE1("MMI_AUDIO_EQ_SWITCH: %d",eq_num);
             if (eq_num != 0)
             {
                 app_cfg_nv.eq_idx++;
@@ -3984,6 +3996,7 @@ void app_mmi_handle_action(uint8_t action)
                    {
                        app_dongle_state_machine(DONGLE_EVENT_PAIRING);
                    }
+				 set_dongle_enter_flag(1);
                  dongle_ctrl_data.force_pairing_triggered = false;
 		     	 APP_PRINT_INFO1("dongle_rf_mode = %d, ", app_cfg_nv.dongle_rf_mode);
 			     app_led_change_mode(LED_MODE_GAMING_MODE, true, false);			
@@ -3998,15 +4011,17 @@ void app_mmi_handle_action(uint8_t action)
         {
              if(app_cfg_nv.sidetoneflag == 0)
 			 {
-			   app_cfg_nv.sidetoneflag = 1;
+			   app_cfg_nv.sidetoneflag = 1;			  
 			   app_audio_tone_type_play(TONE_IN_EAR_DETECTION, false, false);
+			   app_listening_special_event_trigger(LISTENING_MODE_SPECIAL_EVENT_SCO);
              }
 			 else
 			 {
 			   app_cfg_nv.sidetoneflag = 0;
 			   app_audio_tone_type_play(TONE_APT_EQ_8, false, false);
+			   app_listening_special_event_trigger(LISTENING_MODE_SPECIAL_EVENT_SCO_END);
 			 }
-
+             
 			 APP_PRINT_INFO1("sidetoneflag = %d, ", app_cfg_nv.sidetoneflag);
             //app_mmi_execute_output_indication_action(MMI_OUTPUT_INDICATION3_TOGGLE);
         }

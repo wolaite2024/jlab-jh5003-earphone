@@ -539,13 +539,13 @@ void app_dongle_start_recording(uint8_t bd_addr[6])
 void app_dongle_volume_in_mute(void)
 {
     audio_track_volume_in_mute(dongle_record.handle);
-    app_audio_tone_type_play(TONE_MIC_MUTE_ON, false, true);
+    //app_audio_tone_type_play(TONE_MIC_MUTE_ON, false, true);
 }
 
 void app_dongle_volume_in_unmute(void)
 {
     audio_track_volume_in_unmute(dongle_record.handle);
-    app_audio_tone_type_play(TONE_MIC_MUTE_OFF, false, true);
+   // app_audio_tone_type_play(TONE_MIC_MUTE_OFF, false, true);
 }
 
 bool app_dongle_get_record_status(void)

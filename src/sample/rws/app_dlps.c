@@ -243,6 +243,11 @@ void app_dlps_enter_callback(void)
     {
         DBG_DIRECT("app_dlps_enter_callback: lps_mode %d", lps_mode);
 
+	    if(lps_mode == POWER_SHIP_MODE)
+       	{
+           app_adc_deinit();
+	    }
+	   
         if (app_cfg_const.led_support)
         {
             app_led_reset_pad_config();

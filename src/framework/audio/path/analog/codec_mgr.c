@@ -1860,6 +1860,8 @@ static void codec_mgr_adc_gain_set_action(T_CODEC_MGR_SESSION *session,
 
     if (entry->endpoint_type == AUDIO_ROUTE_ENDPOINT_MIC)
     {
+        if (entry->endpoint_attr.mic.id != AUDIO_ROUTE_EXT_MIC)
+        {
         uint8_t mic_sel, mic_src;
 
         mic_sel = codec_drv_get_mic_ch_sel(entry->endpoint_attr.mic.id, &mic_src);
@@ -1893,6 +1895,7 @@ static void codec_mgr_adc_gain_set_action(T_CODEC_MGR_SESSION *session,
             {
                 codec_mgr_amic_gain_set((T_CODEC_AMIC_CHANNEL_SEL)mic_sel,
                                         (T_CODEC_ADC_ANA_GAIN)entry->endpoint_attr.mic.ana_gain);
+                }
             }
         }
     }

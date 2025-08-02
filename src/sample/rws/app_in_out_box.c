@@ -155,6 +155,7 @@ static void app_in_out_box_handle(T_CASE_LOCATION_STATUS local)
             if (app_cfg_const.enable_inbox_power_off)
             {
                 app_auto_power_off_disable(AUTO_POWER_OFF_MASK_IN_BOX);
+				app_cfg_nv.app_is_power_on = 0;
             }
         }
 

@@ -927,6 +927,7 @@ static void app_device_link_policy_ind(T_BP_EVENT event, T_BP_EVENT_PARAM *event
 
     case BP_EVENT_PROFILE_CONN_SUC:
         {
+             static uint8_t is_first_src_connect = 0;
             if (event_param->is_first_prof)
             {
                 if (enable_pairing_complete_led)
@@ -962,20 +963,30 @@ static void app_device_link_policy_ind(T_BP_EVENT event, T_BP_EVENT_PARAM *event
                         }
                         else
                         {
-                           if(!app_link_check_dongle_link(event_param->bd_addr) && app_hfp_get_call_status() != APP_CALL_ACTIVE)
-                                app_audio_tone_type_play(TONE_LINK_CONNECTED, false, true);
+                           if(!app_link_check_dongle_link(event_param->bd_addr))
+                                app_audio_tone_type_play(TONE_LINK_CONNECTED, false, false);
 						   else
-						    	app_audio_tone_type_play(TONE_APT_VOL_3, false, true);
+						    	{
+						    	 if(app_hfp_get_call_status() != APP_CALL_ACTIVE)
+						    	  {
+						    	    extern void set_dongle_enter_flag(uint8_t flag);
+						    	    set_dongle_enter_flag(0);
+						    	    app_audio_tone_type_play(TONE_APT_VOL_3, false, false);
+						    	 }
+						   	  }
 						   	
 						   
                         }
-#endif
-
+#endif 
+  
+                        APP_PRINT_INFO1("app_device_link_policy_ind: is_first_src_connect %d ",is_first_src_connect);
                         //Enable battery report when first phone connected
-                        if (app_cfg_const.enable_bat_report_when_phone_conn && event_param->is_first_src)
+                       // if (app_cfg_const.enable_bat_report_when_phone_conn && event_param->is_first_src)
+                       if (app_cfg_const.enable_bat_report_when_phone_conn && !is_first_src_connect)
                         {
                             uint8_t bat_level = 0;
                             uint8_t state_of_charge = app_db.local_batt_level;
+							is_first_src_connect = 1;
 
                             state_of_charge = ((state_of_charge + 9) / 10) * 10;
                             bat_level = state_of_charge / 10;
