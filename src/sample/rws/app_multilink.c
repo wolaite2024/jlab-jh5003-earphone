@@ -1872,14 +1872,11 @@ static void app_multi_bt_cback(T_BT_EVENT event_type, void *event_buf, uint16_t 
 #endif
 
 #if F_APP_GAMING_DONGLE_SUPPORT
-#if F_APP_GAMING_CHAT_MIXING_SUPPORT
-#else
                 if (event_type == BT_EVENT_AVRCP_PLAY_STATUS_RSP &&
                     app_link_check_dongle_link(param->avrcp_play_status_changed.bd_addr))
                 {
                     break;
                 }
-#endif
 #endif
 
                 if (param->avrcp_play_status_changed.play_status == BT_AVRCP_PLAY_STATUS_PLAYING)

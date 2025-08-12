@@ -3561,12 +3561,11 @@ static void app_audio_bt_cback(T_BT_EVENT event_type, void *event_buf, uint16_t 
             {
                 if (app_db.avrcp_play_status != param->avrcp_play_status_changed.play_status
 #if F_APP_GAMING_DONGLE_SUPPORT
-#if F_APP_GAMING_CHAT_MIXING_SUPPORT
-#else
+
                     && !(event_type == BT_EVENT_AVRCP_PLAY_STATUS_RSP &&
                          app_link_check_dongle_link(param->avrcp_play_status_changed.bd_addr))
 #endif
-#endif
+
                    )
                 {
                     app_audio_set_avrcp_status(param->avrcp_play_status_changed.play_status);
@@ -7056,6 +7055,7 @@ bool app_audio_buffer_level_get(uint16_t *level)
 
 void app_audio_spk_mute_unmute(bool need)
 {
+  return ;
     if (need)
     {
         app_db.playback_muted = true;
