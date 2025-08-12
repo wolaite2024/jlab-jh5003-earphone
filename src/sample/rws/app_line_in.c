@@ -280,7 +280,7 @@ static void app_line_in_timeout_cb(uint8_t timer_evt, uint16_t param)
 
             app_stop_timer(&timer_idx_line_in_debounce);
 
-            if (0 == gpio_status)
+            if (1 == gpio_status)
             {
                 line_in_plug_state = true;
                 if (app_db.device_state == APP_DEVICE_STATE_ON)
@@ -530,9 +530,9 @@ void app_line_in_power_on_check(void)
 
     app_line_in_intpolarity_update();
 
-    if (0 == hal_gpio_get_input_level(app_cfg_const.line_in_pinmux))
+    if (1 == hal_gpio_get_input_level(app_cfg_const.line_in_pinmux))
     {
-        gpio_msg.u.param = 0;//gpio_status
+        gpio_msg.u.param = 1;//gpio_status
         gpio_msg.type = IO_MSG_TYPE_GPIO;
         gpio_msg.subtype = IO_MSG_GPIO_LINE_IN;
 

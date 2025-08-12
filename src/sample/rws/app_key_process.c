@@ -2654,19 +2654,19 @@ static void app_key_check_press(T_KEY_CHECK key_check)
                 {
                     T_APP_CHARGER_STATE app_charger_state;
                     uint8_t state_of_charge;
-                     uint8_t pin_num;
-					 uint8_t gpio_status;
-				    pin_num = app_cfg_const.line_in_pinmux;
-			    	gpio_status = hal_gpio_get_input_level(pin_num);
+                   //  uint8_t pin_num;
+					// uint8_t gpio_status;
+				  //  pin_num = app_cfg_const.line_in_pinmux;
+			    	//gpio_status = hal_gpio_get_input_level(pin_num);
                     app_charger_state = app_charger_get_charge_state();
                     state_of_charge = app_charger_get_soc();
-					APP_PRINT_TRACE3("app_key_check_press:  %d, cap %d gpio_status  %d ",
-                                 app_charger_state, state_of_charge,gpio_status);
+					APP_PRINT_TRACE2("app_key_check_press:  %d, cap %d  ",
+                                 app_charger_state, state_of_charge);
                     //if (((app_charger_state == APP_CHARGER_STATE_NO_CHARGE) && (state_of_charge == BAT_CAPACITY_0)) || !gpio_status)
-                    if (!gpio_status)
-                    {
-                        return;
-                    }
+                   // if (!gpio_status)
+                   // {
+                       // return;
+                   // }
 					
                 }
 
