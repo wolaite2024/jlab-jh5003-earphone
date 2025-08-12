@@ -4860,22 +4860,29 @@ static void app_bt_policy_stable_sched(T_STABLE_ENTER_MODE mode)
 #if F_APP_LEGACY_DONGLE_BINDING || F_APP_LEA_DONGLE_BINDING
                         dongle_pairing_non_intentionally = true;
 #endif
-                        if(Linklostflag && (!get_dongle_connect_record_flag()))
+                       if(Linklostflag && (!get_dongle_connect_record_flag()))
+                        //if(Linklostflag)
                         {
                            Linklostflag = 0;
                            app_mmi_handle_action(MMI_DEV_POWER_OFF);
 						}
 						else
                         {
-                          if(app_cfg_nv.allowed_source != 0)
+						   if(Linklostflag)
+						   {
+						  	    app_auto_power_off_enable(AUTO_POWER_OFF_MASK_LINKBACK, app_cfg_const.timer_link_back_loss);
+						  	}
+
+			                 APP_PRINT_TRACE2("live app_cfg_nv.allowed_source =   %d Linklostflag = %d ,",app_cfg_nv.allowed_source ,Linklostflag);
+                          if(app_cfg_nv.allowed_source == 1)
                            {
                              app_bt_policy_enter_state(STATE_AFE_PAIRING_MODE, BT_DEVICE_MODE_DISCOVERABLE_CONNECTABLE);
                            }
 						  else
 						  	{
-						  	   //app_auto_power_off_enable(AUTO_POWER_OFF_MASK_POWER_ON, app_cfg_const.timer_link_back_loss);
-						  	   app_bt_policy_enter_state(STATE_AFE_STANDBY, BT_DEVICE_MODE_CONNECTABLE);
-                               APP_PRINT_TRACE1("live app_cfg_nv.allowed_source =   %d,",app_cfg_nv.allowed_source);
+				  
+						  	    app_bt_policy_enter_state(STATE_AFE_STANDBY, BT_DEVICE_MODE_CONNECTABLE);
+                              
 						    }
 						}
 #if F_APP_DURIAN_SUPPORT
