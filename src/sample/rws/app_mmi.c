@@ -3075,7 +3075,7 @@ void app_mmi_handle_action(uint8_t action)
         {
             uint8_t eq_num = eq_utils_num_get(SPK_SW_EQ, app_db.spk_eq_mode);
 
-             APP_PRINT_TRACE2("MMI_AUDIO_EQ_SWITCH: %d",eq_num,app_db.spk_eq_mode);
+             APP_PRINT_TRACE2("MMI_AUDIO_EQ_SWITCH: %d %d",eq_num,app_db.spk_eq_mode);
             if (eq_num != 0)
             {
                 app_cfg_nv.eq_idx++;

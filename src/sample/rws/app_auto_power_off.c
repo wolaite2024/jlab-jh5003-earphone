@@ -75,7 +75,7 @@ void app_auto_power_off_enable(uint32_t flag, uint16_t timeout)
 
     poweroff_flag &= ~flag;
 
-    if (poweroff_flag == 0)
+    if (poweroff_flag == 0 ||(flag == AUTO_POWER_OFF_MASK_LINKBACK))
     {
         if (timeout == 0)
         {

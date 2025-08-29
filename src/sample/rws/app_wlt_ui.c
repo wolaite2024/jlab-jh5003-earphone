@@ -156,14 +156,52 @@ static void app_ui_timeout_cb(uint8_t timer_evt, uint16_t param)
 
 }
 
+void setcurrent(void)
+{
+  static uint8_t setflag = 0;
+  static uint8_t times = 0 ;
+  
+  if(adp_get_current_state(ADP_DETECT_5V) == ADP_STATE_IN)
+  	{
+  	       times ++;
+	  	  if(times >= 10)
+	      {
+	       if(!setflag)
+	       {
+	         setflag = 1;
+			 APP_PRINT_INFO1("setcurrent hi   : %d",times);
+			 
+			 Pinmux_Config(CHG_ISET, DWGPIO);
+			 Pad_Config(CHG_ISET, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_UP, PAD_OUT_ENABLE, PAD_OUT_HIGH);
+
+	       	}
+	      }
+
+   }
+  else
+  	{
+  		times = 0;
+  	     if(setflag)
+  	    {
+  	         setflag = 0;
+  	         
+
+			 Pinmux_Config(CHG_ISET, DWGPIO);
+			 Pad_Config(CHG_ISET, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_DOWN, PAD_OUT_ENABLE, PAD_OUT_LOW);
+
+			 APP_PRINT_INFO1("setcurrent low   : %d",times); 
+  	     }
+    }
+}
 void Initialize_charge(void)
 {
 
     /* CHG Pad Config */
 	    Pinmux_Config(CHG_DONE_INFO, DWGPIO);
     Pad_Config(CHG_DONE_INFO, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_UP, PAD_OUT_DISABLE, PAD_OUT_HIGH);
+	
 		Pinmux_Config(CHG_ISET, DWGPIO);
-    Pad_Config(CHG_ISET, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_UP, PAD_OUT_ENABLE, PAD_OUT_HIGH);
+    Pad_Config(CHG_ISET, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_DOWN, PAD_OUT_ENABLE, PAD_OUT_LOW);
 		Pinmux_Config(CHG_OFF, DWGPIO);
 	Pad_Config(CHG_OFF, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_NONE, PAD_OUT_DISABLE, PAD_OUT_HIGH);
 		//Pinmux_Config(MIC_MUTE, DWGPIO);
@@ -212,7 +250,7 @@ void Initialize_switch_ui(void)
 	Pinmux_Config(PIN_2_4G_BT_SWITCH, DWGPIO);
     Pad_Config(PIN_2_4G_BT_SWITCH, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_UP, PAD_OUT_DISABLE, PAD_OUT_HIGH);	
 	Pinmux_Config(BT_SWITCH, DWGPIO);
-	Pad_Config(BT_SWITCH, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_UP, PAD_OUT_DISABLE, PAD_OUT_HIGH);
+	Pad_Config(BT_SWITCH, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_UP, PAD_OUT_DISABLE, PAD_OUT_LOW);
 
 }
 
@@ -286,7 +324,7 @@ extern void app_charger_state_wlt(T_CHARGER_STATE rtk_charger_state);
 		        {
 		            ChargeHiLowTempTime ++;		         		        
 		        }
-				 else if ((temperature_battery <= 337) ||( temperature_battery >= 748))		
+				 else if ((temperature_battery <= 345) ||( temperature_battery >= 739))		
 		        {
 		          if(HiLowChargeFlag != 1)
 		           {     
@@ -295,7 +333,7 @@ extern void app_charger_state_wlt(T_CHARGER_STATE rtk_charger_state);
 					   APP_PRINT_INFO1("  off charge ===: %d",  HiLowChargeFlag);
 		          	}
 		        }
-		       	else  if ((temperature_battery >= 353) ||( temperature_battery <= 730))	
+		       	else  if ((temperature_battery >= 362) && (temperature_battery <= 720))	
 		        {
 		          if(HiLowChargeFlag == 1)
 		           {
@@ -403,6 +441,7 @@ static void app_adc_timeout_cb(uint8_t timer_evt, uint16_t param)
             app_adc_vbat_ntc_voltage_read();
         }
 	    app_led_check_charging_mode(0);
+	    setcurrent();
         break;
 
     default:
